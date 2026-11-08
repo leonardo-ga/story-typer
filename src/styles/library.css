@@ -1,0 +1,167 @@
+.library-intro {
+  text-align: center;
+  padding: 36px 0 30px;
+}
+.library-intro h1 {
+  font-size: 36px;
+  letter-spacing: -0.8px;
+  margin: 14px 0 10px;
+}
+.library {
+  padding-bottom: 0;
+}
+.collection-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #ffffff0d;
+}
+.collection-heading h2 {
+  font-size: 19px;
+  margin: 0;
+}
+.collection-heading > span {
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  color: #829080;
+}
+.story-card-body > .eyebrow {
+  font-size: 9px;
+  margin-bottom: 12px;
+}
+.library-footer {
+  align-items: center;
+  padding: 24px 0;
+  gap: 12px;
+  letter-spacing: 0;
+}
+.library-footer p {
+  margin: 0;
+  font:
+    italic 13px/1.7 Georgia,
+    serif;
+  color: #94a28f;
+}
+.library-footer > span {
+  font-size: 10px;
+  color: #758575;
+}
+.library-intro > p {
+  color: #8c9c96;
+  font-size: 14px;
+  margin: 0;
+}
+.story-card {
+  display: grid;
+  grid-template-columns: 42% 58%;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  overflow: hidden;
+  background: var(--surface);
+  box-shadow: 0 12px 35px #0002;
+  transition: border-color 0.2s ease;
+}
+.story-card:focus-within,
+.story-card:hover {
+  border-color: #819075;
+}
+.story-card + .story-card {
+  margin-top: 22px;
+}
+.story-card-body {
+  padding: 28px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+}
+.story-card-body h2 {
+  font-size: 30px;
+  margin: 0 0 12px;
+}
+.story-card-body > p {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #9eafa1;
+  margin: 0;
+}
+.story-card-body .tags {
+  margin: 16px 0 20px;
+  flex-wrap: wrap;
+}
+.saved-progress {
+  font-size: 10px;
+  color: #a6b49f;
+  margin-top: 15px;
+}
+.art-caption {
+  position: absolute;
+  bottom: 28px;
+  left: 27px;
+  right: 20px;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.art-caption > span {
+  font-size: 8px;
+  color: #93a59b;
+  letter-spacing: 1.6px;
+}
+.art-caption strong {
+  font:
+    italic 19px/1.5 'Libre Baskerville',
+    Georgia,
+    serif;
+  color: #dedeca;
+}
+@media (max-width: 600px) {
+  .library-intro > .eyebrow {
+    font-size: 8px;
+  }
+  .collection-heading > span {
+    font-size: 7px;
+  }
+  .library-footer {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 6px;
+  }
+  .library-footer p {
+    font-size: 12px;
+  }
+  .library-intro {
+    padding: 24px 0 22px;
+  }
+  .library-intro > p {
+    font-size: 12px;
+    line-height: 1.7;
+  }
+  .library-intro h1 {
+    font-size: 26px;
+  }
+  .story-card {
+    grid-template-columns: 1fr;
+  }
+  .story-card-body {
+    padding: 22px;
+  }
+  .story-card-body h2 {
+    font-size: 25px;
+  }
+  .story-card-body > p {
+    font-size: 13px;
+  }
+  .art-caption {
+    bottom: 28px;
+    left: 22px;
+  }
+  .art-caption strong {
+    font-size: 18px;
+  }
+}

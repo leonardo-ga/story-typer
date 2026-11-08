@@ -1,0 +1,355 @@
+body.reading {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+.story-mode {
+  height: var(--reading-height, 100dvh);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  isolation: isolate;
+}
+.story-mode > .site-header,
+.story-mode > main {
+  position: relative;
+  z-index: 1;
+}
+.story-mode > main {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: none;
+  flex: 1;
+  min-height: 0;
+  padding: 0 18px;
+}
+.story-nav {
+  padding: 10px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+.story-nav a {
+  font-size: 12px;
+  color: #b6c2af;
+  text-decoration: none;
+}
+.story-nav a:hover {
+  color: var(--accent);
+}
+.story-nav > span {
+  font:
+    italic 13px Georgia,
+    serif;
+  color: #a3ad99;
+}
+.game-layout {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+.console {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+.reader-shell {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+.story-stream {
+  height: 100%;
+  overflow-y: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  padding: 8vh max(12px, calc((100% - 1080px) / 2)) 45vh;
+  mask-image: linear-gradient(transparent, #000 3%, #000 96%, transparent);
+}
+.story-stream.stream-paused {
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.stream-paragraph {
+  margin: 0 0 1.2em;
+  transition: opacity 0.4s;
+}
+.passage {
+  font:
+    clamp(21px, 2.2vw, 30px) / 1.85 'Libre Baskerville',
+    Georgia,
+    serif;
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.past-paragraph {
+  opacity: 0.78;
+}
+.future-paragraph {
+  opacity: 0.65;
+}
+.pending {
+  color: #75827a;
+}
+.current-paragraph .pending {
+  color: #8f9d94;
+}
+.correct {
+  color: var(--typed);
+}
+.incorrect {
+  background: #9b423a66;
+  color: #ffcac0;
+  border-radius: 2px;
+  outline: 1px solid #e89b8466;
+}
+.cursor {
+  position: relative;
+}
+.cursor::before {
+  content: '';
+  position: absolute;
+  left: -2px;
+  top: 0.08em;
+  width: 2px;
+  height: 1.05em;
+  background: var(--accent);
+  pointer-events: none;
+}
+.reader-input {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  resize: none;
+  padding: 0;
+  border: 0;
+  pointer-events: none;
+  font-size: 16px;
+}
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 16px;
+}
+.reader-shell:has(> .overlay) .story-stream {
+  opacity: 0.08;
+  filter: blur(2px);
+  pointer-events: none;
+}
+.small-icon {
+  font-size: 27px;
+  color: var(--accent);
+}
+.overlay p {
+  font-size: 12px;
+  color: #97a59b;
+  margin: 0 0 23px;
+  line-height: 1.7;
+}
+.reader-status {
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--muted);
+  flex-shrink: 0;
+  padding: 5px 8px;
+  text-align: center;
+}
+.reader-status.has-error {
+  color: #ffb7a6;
+}
+.progress-track {
+  height: 2px;
+  background: #354038;
+  margin-top: 6px;
+  border-radius: 2px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.progress-track > div {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.3s;
+}
+.stats-bar {
+  display: flex;
+  gap: 24px;
+  min-height: 46px;
+  align-items: center;
+  padding: 9px 0;
+  flex-shrink: 0;
+}
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+.stat strong {
+  font-size: 20px;
+  font-weight: 400;
+  color: #ddd9bf;
+}
+.stat > span {
+  font-size: 8px;
+  color: #7d8c80;
+  max-width: 45px;
+  line-height: 1.7;
+  letter-spacing: 1px;
+}
+.compact-progress {
+  font-size: 11px;
+  color: #93a38f;
+}
+.stats-bar > .text-button {
+  margin-left: auto;
+}
+.pause-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-left: auto;
+  border: 1px solid #ffffff18;
+  background: transparent;
+  color: #a9b5a7;
+  border-radius: 8px;
+  padding: 8px 13px;
+  font-size: 12px;
+  font-weight: 500;
+  min-width: 92px;
+}
+.pause-control svg {
+  width: 16px;
+  height: 16px;
+}
+.pause-control:hover {
+  background: #ffffff06;
+  color: var(--text);
+}
+.pause-control[aria-pressed='true'] {
+  background: #ffffff05;
+  color: var(--accent);
+}
+.results {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  overflow: auto;
+  padding: 20px 0;
+}
+.results h2 {
+  font-size: 27px;
+  margin: 19px 0;
+}
+.results > p {
+  font-size: 13px;
+  color: #9ba99b;
+}
+.result-stats {
+  display: flex;
+  flex-shrink: 0;
+  gap: 32px;
+  margin: 20px 0 30px;
+}
+.result-stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.result-stats strong {
+  font-size: 27px;
+  color: var(--accent);
+}
+.result-stats span {
+  font-size: 8px;
+  letter-spacing: 1.8px;
+  color: #93a28f;
+}
+@media (max-width: 650px) {
+  .story-mode > main {
+    padding: 0 12px;
+  }
+  .story-stream {
+    padding: 5vh 5px 45vh;
+  }
+  .passage {
+    font-size: 21px;
+  }
+  .stats-bar {
+    gap: 12px;
+    flex-wrap: nowrap;
+    padding: 7px 0;
+  }
+  .stat {
+    gap: 5px;
+  }
+  .stat strong {
+    font-size: 17px;
+  }
+  .stat > span {
+    font-size: 7px;
+  }
+  .compact-progress {
+    display: none;
+  }
+  .pause-control {
+    padding: 8px 13px;
+    min-width: 88px;
+    font-size: 11px;
+  }
+  .reader-status {
+    font-size: 10px;
+    min-height: 29px;
+  }
+  .stats-bar > .text-button {
+    font-size: 9px;
+  }
+  .story-nav > span {
+    font-size: 12px;
+  }
+  .overlay h3 {
+    font-size: 17px;
+  }
+  .result-stats {
+    gap: 22px;
+  }
+}
+@media (max-height: 450px) {
+  .story-nav {
+    padding: 5px 0;
+  }
+  .reader-status {
+    min-height: 22px;
+    font-size: 9px;
+  }
+  .stats-bar {
+    min-height: 38px;
+    padding: 5px 0;
+  }
+  .story-stream {
+    padding-top: 12px;
+  }
+  .results {
+    justify-content: flex-start;
+  }
+}

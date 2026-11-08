@@ -1,0 +1,105 @@
+.experience-controls {
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid #ffffff10;
+  border-radius: 14px;
+  background: #ffffff03;
+}
+.effect-control {
+  position: relative;
+}
+.effect-toggle {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: #93a299;
+  background: transparent;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease;
+}
+.effect-toggle svg {
+  width: 20px;
+  height: 20px;
+}
+.effect-toggle:hover {
+  color: #e1e8dc;
+  background: #ffffff08;
+}
+.effect-toggle[aria-pressed='true'] {
+  color: var(--accent);
+}
+.effect-toggle:active {
+  background: #ffffff12;
+}
+.effect-indicator {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  width: 4px;
+  height: 4px;
+  border: 1px solid #647369;
+  border-radius: 50%;
+}
+.effect-toggle[aria-pressed='true'] .effect-indicator {
+  background: currentColor;
+  border-color: currentColor;
+}
+.effect-tooltip {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  z-index: 5;
+  width: max-content;
+  max-width: 220px;
+  padding: 10px 12px;
+  border: 1px solid #465148;
+  border-radius: 8px;
+  background: #202c28;
+  box-shadow: 0 8px 25px #0004;
+  color: #dce2d9;
+  font-size: 11px;
+  line-height: 1.5;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.15s ease,
+    visibility 0.15s ease;
+}
+.effect-toggle:focus-visible + .effect-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0.35s;
+}
+@media (hover: hover) and (pointer: fine) {
+  .effect-control:hover .effect-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0.35s;
+  }
+}
+.effect-control[data-tooltip-dismissed='true'] .effect-tooltip {
+  opacity: 0;
+  visibility: hidden;
+  transition-delay: 0s;
+}
+.effect-tooltip-state {
+  margin-left: 12px;
+  color: var(--accent);
+}
+.story-mode > .site-header {
+  z-index: 3;
+}
+@media (max-height: 450px) {
+  .effect-toggle {
+    width: 34px;
+    height: 34px;
+  }
+}
