@@ -12,7 +12,7 @@ export function StoryBackdrop({ game }: { game: StoryGame }) {
     !finished &&
     (!animation.clearAtEnding || scene < selected.paragraphs.length - 1) && (
       <div
-        className={`rain-background ${animation.kind === 'stars' ? 'star-background' : ''} ${paused ? 'rain-paused' : ''}`}
+        className={`rain-background ${animation.kind === 'stars' ? 'star-background' : `${animation.kind}-background`} ${paused ? 'rain-paused' : ''}`}
         aria-hidden="true"
       >
         {Array.from({ length: 28 }, (_, index) => (

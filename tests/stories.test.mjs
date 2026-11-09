@@ -11,6 +11,110 @@ import { getTheme } from '../src/stories/themes.ts';
 import { createStoryCatalog } from '../src/stories/catalog.ts';
 import { getStoryText } from '../src/stories/text.ts';
 import { covers } from '../src/components/covers/index.ts';
+import { longFormStories } from '../src/stories/long-form-index.ts';
+import { practiceWordsPerMinute } from '../src/stories/long-form.ts';
+import { createAmbience } from '../src/audio/ambience.ts';
+
+test('every registered theme can start and close its synthesized ambience', async () => {
+  const original = globalThis.AudioContext;
+  class Node {
+    frequency = { value: 0 };
+    gain = { value: 0 };
+    started = false;
+    connect(target) {
+      return target;
+    }
+    start() {
+      this.started = true;
+    }
+  }
+  class Context {
+    sampleRate = 1000;
+    destination = new Node();
+    nodes = [];
+    buffers = [];
+    closed = false;
+    node() {
+      const node = new Node();
+      this.nodes.push(node);
+      return node;
+    }
+    createBuffer(_channels, length) {
+      const data = new Float32Array(length);
+      this.buffers.push(data);
+      return { getChannelData: () => data };
+    }
+    createBufferSource() {
+      return this.node();
+    }
+    createBiquadFilter() {
+      return this.node();
+    }
+    createGain() {
+      return this.node();
+    }
+    createOscillator() {
+      return this.node();
+    }
+    async close() {
+      this.closed = true;
+    }
+  }
+  globalThis.AudioContext = Context;
+  try {
+    for (const theme of new Set(stories.map((story) => story.theme))) {
+      const context = createAmbience(theme);
+      assert.ok(
+        context.nodes.some((node) => node.started),
+        theme,
+      );
+      assert.ok(
+        context.buffers.every((buffer) => buffer.every(Number.isFinite)),
+        theme,
+      );
+      await context.close();
+      assert.equal(context.closed, true);
+    }
+  } finally {
+    if (original) globalThis.AudioContext = original;
+    else Reflect.deleteProperty(globalThis, 'AudioContext');
+  }
+});
+
+test('the long-form collection has fifteen distinct complete stories with honest duration estimates', () => {
+  assert.equal(longFormStories.length, 15);
+  assert.equal(new Set(longFormStories.map((story) => story.storyId)).size, 15);
+  assert.deepEqual(
+    new Set(longFormStories.map((story) => story.language)),
+    new Set(['en', 'it', 'fr', 'ko']),
+  );
+  assert.ok(
+    longFormStories.filter((story) => story.estimatedMinutes >= 100).length >=
+      2,
+  );
+  assert.ok(
+    longFormStories.filter(
+      (story) => story.estimatedMinutes >= 25 && story.estimatedMinutes <= 45,
+    ).length >= 4,
+  );
+  const passages = new Set();
+  for (const story of longFormStories) {
+    const text = story.paragraphs.map((part) => part.text).join(' ');
+    assert.ok(Array.from(text).length >= 2500, story.id);
+    assert.equal(
+      story.estimatedMinutes,
+      Math.round(Array.from(text).length / (practiceWordsPerMinute * 5)),
+    );
+    assert.equal(story.estimateWpm, practiceWordsPerMinute);
+    assert.ok(getTheme(story.theme).ambience.gain > 0);
+    assert.ok(getTheme(story.theme).animation);
+    for (const part of story.paragraphs) {
+      assert.ok(part.text.length > 100, story.id);
+      assert.ok(!passages.has(part.text), `Repeated paragraph: ${story.id}`);
+      passages.add(part.text);
+    }
+  }
+});
 
 test('the catalog indexes routes and editions and rejects ambiguous registrations', () => {
   const catalog = createStoryCatalog(stories);

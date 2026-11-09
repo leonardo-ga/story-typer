@@ -10,6 +10,8 @@ Each language edition is a content file under `src/stories/`. Adding a story wit
 
 Write ordinary Unicode text. Paragraphs are normalized to NFC, segmented into visible characters, and joined with one space. Do not add a newline or trailing separator to paragraph text. Quotes, accents, and punctuation are part of the exercise; check their keyboard requirements before publishing.
 
+For a longer story, follow a file such as `the-cartographers-winter.en.ts`: `longFormStory(metadata, prose)` splits authored prose at blank lines and computes an estimate at 25 WPM. Register it in `long-form-index.ts`, already included by the main registry. Do not pad a short story by repeating paragraphs or manually inflating its duration. Set the theme to match the setting; every long-form story currently has optional ambience and a restrained animation. Estimates describe typing time, not reading time or a time limit.
+
 ## Translations
 
 Translations share a `storyId`, not an `id`. They have independent typing sessions and estimates. Use the garden editions as examples: shared presentation may be inherited, but translate all reader-facing content, including the title, description, caption, setting, ending, epilogue, and paragraphs. Register each edition separately.

@@ -2,6 +2,10 @@ import { useI18n } from '../i18n/I18nProvider';
 import { useId, useState } from 'react';
 
 const icons = {
+  leaves: 'M19 4C8 3 3 8 5 15c5 7 13 3 14-11ZM6 18 16 8',
+  snow: 'M12 3v18M4 7l16 10M4 17 20 7M9 4l3 3 3-3M9 20l3-3 3 3',
+  dust: 'M5 5h.01M16 4h.01M11 12h.01M4 18h.01M19 17h.01M19 9h.01',
+  tracks: 'M4 5h16M4 19h16M8 5v14M16 5v14M8 9h8M8 15h8',
   keyboard:
     'M5 5h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2ZM7 9h.01M11 9h.01M15 9h.01M17 12h.01M13 12h.01M9 12h.01M7 15h10',
   rain: 'M7 14a4 4 0 1 1 .6-7.95A5 5 0 0 1 17 7a3.5 3.5 0 0 1 0 7M8 17l-1 3m6-4-1 3m6-2-1 3',

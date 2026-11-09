@@ -22,6 +22,13 @@ export function segmentText(text) {
   }));
 }
 
+/** Read one grapheme lazily; do not segment a long remaining story on timer ticks.
+ * @param {string} text
+ */
+export function firstCharacter(text) {
+  return segmenter.segment(text)[Symbol.iterator]().next().value?.segment ?? '';
+}
+
 /** @param {string | undefined} actual @param {string | undefined} expected @param {boolean} [assistance] */
 export function matchCharacter(actual, expected, assistance = false) {
   if (actual === undefined || expected === undefined) return 'incorrect';

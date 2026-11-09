@@ -19,7 +19,7 @@ Use **All stories** or the logo to return to the menu. Your current session is p
 
 ## Features
 
-- Four original stories: **The Last Frequency** (coastal mystery), **One Small Garden** (gentle science fiction), **The Oven Inspector** (comic fantasy), and **The Last Repair** (slice of life).
+- Twenty distinct stories in twenty-two language editions, including fifteen longer originals in English, Italian, French, and Korean. The original short stories remain available.
 - Compact search, with genre/time/progress/language filters and sorting inside a collapsible Filters panel. Language and keyboard preferences live in the top-right settings popup on both pages. Filters stay selected when returning from a story. Resetting filters does not clear personal preferences.
 - **One Small Garden** also has an Italian edition, **Un piccolo giardino**, at `#un-piccolo-giardino`. Language editions share a catalog card, artwork, and effects, with separate text, estimates, routes, and progress. Stories are authored language editions, not translated at runtime. The site interface has its own independent language setting.
 - Its French edition, **Un petit jardin**, is available at `#un-petit-jardin`, in the language filters, and as a remembered preferred language. Like the Italian edition, it keeps separate progress and supports accented characters and optional character help.
@@ -29,9 +29,33 @@ Use **All stories** or the logo to return to the menu. Your current session is p
 - Optional locally synthesized radio ambience; no audio files or account required.
 - Independent top-bar switches for soft typing clicks and story-specific animations, both off by default. The coastal mystery has rain and radio static; the orbital greenhouse has drifting stardust and a quiet station hum. Animations stay at the edges, freeze while paused, and are disabled by reduced-motion settings. Coastal rain clears for the final morning paragraph.
 - Responsive lighthouse illustration made with CSS, with reduced-motion support.
-- Each story has its own illustrated cover and ending. The two longer stories have optional oven ambience or a quiet workshop clock, with no background animation where it would distract from the story.
+- Stories have individual endings and themed illustrated covers. The longer collection adds forest, winter, railway, and archive covers with wind, train, and quiet room ambience; optional leaves, snow, passing lights, and dust motes stay subtle and respect reduced motion and pause.
 
 WPM uses accepted visible characters divided by five and active typing time. Time spent paused is excluded. Accuracy counts accepted entries against all entered characters, so corrected mistakes still affect accuracy. Pasting and dropping text are disabled for the exercise. Progress is held in memory and resets on refresh.
+
+## Longer story collection
+
+The fifteen additions contain approximately 104,000 characters of original prose, with no repeated paragraphs. Estimates below use **25 WPM** (five characters per word), stated in each card's tooltip; actual time depends on speed, corrections, and input method. Filters now distinguish 11–30 minutes, 31–60 minutes, and over 60 minutes. For long attempts, pause or return to the library to keep progress during the current visit; refreshing still resets in-memory sessions.
+
+| Story                            | Language | Estimated minutes |
+| -------------------------------- | -------- | ----------------: |
+| The Tide Ledger                  | English  |                33 |
+| A Seat for the River             | English  |                38 |
+| The Orchard That Voted           | English  |                40 |
+| Il condominio delle chiavi       | Italiano |                32 |
+| Il processo al vento             | Italiano |                35 |
+| Le phare sans mer                | Français |                37 |
+| Le jardin sous la neige          | Français |                37 |
+| 달빛 도서관의 반납일             | 한국어   |                21 |
+| The Museum of Unfinished Weather | English  |                68 |
+| The Third Sunrise                | English  |                66 |
+| La strada dei nomi               | Italiano |                54 |
+| La poste des objets perdus       | Français |                65 |
+| Le dernier wagon bleu            | Français |                59 |
+| The Cartographer’s Winter        | English  |               118 |
+| Il mercato delle ore             | Italiano |               128 |
+
+`src/stories/long-form-index.ts` registers these additions. `long-form.ts` converts authored prose paragraphs into the existing story format and calculates the estimates; it does not generate or repeat narrative text. The reader memoizes individual paragraphs so timer ticks do not rebuild an entire long story's character markup. Next-character lookup reads one grapheme lazily instead of re-segmenting the remaining story on every clock update. Catalog cards use cached plain text without preparing reader grapheme metadata for every story.
 
 ## Language and keyboard preferences
 
@@ -49,7 +73,7 @@ Reading languages use a compact, searchable multi-select with a selected-languag
 
 Site language, keyboard layout, error handling, and library filters use the same dropdown design in single-selection mode. Choosing a row closes the menu and restores focus. Arrow keys, Home/End, typeahead, and Escape are supported; lists with more than eight choices include search. `SelectMenu` owns shared positioning and interaction, with small `SingleSelect` and `MultiSelect` wrappers.
 
-Reading languages favor available editions while keeping one card per story. An unfinished edition in a selected language takes precedence; otherwise the first matching edition in collection order is shown. Edition links still offer every translation, explicit language filters take precedence, and stories outside the preferences remain visible. Site language never changes this selection.
+Reading languages favor available editions while keeping one card per story. Multilingual cards have language buttons that update the title, description, compatibility advice, progress, and start link without opening the story. Preferred reading languages appear first. Each manual edition choice is remembered in localStorage under `story-typer.story-editions.v1`. Without a manual choice, an unfinished edition in a selected language takes precedence; otherwise the first matching edition in collection order is shown. Edition buttons and remembered choices respect all active filters. Stories outside the reading preferences remain visible. Site language stays independent.
 
 Changes save immediately, without a Done or Save step. Opening preferences pauses an active attempt; close with Escape, the close button, or the backdrop, then resume explicitly. The site and reading languages, error-handling mode, assisted-typing preference, and confirmed keyboard profile are remembered in local storage.
 

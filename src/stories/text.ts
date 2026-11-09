@@ -17,6 +17,19 @@ function prepareStory(story: Story) {
 }
 
 const prepared = new WeakMap<Story, ReturnType<typeof prepareStory>>();
+const plainText = new WeakMap<Story, string>();
+
+/** Catalog cards need text, not every grapheme's rendering metadata. */
+export function getStoryPlainText(story: Story) {
+  let result = plainText.get(story);
+  if (result === undefined) {
+    result = story.paragraphs
+      .map((part) => part.text.normalize('NFC'))
+      .join(' ');
+    plainText.set(story, result);
+  }
+  return result;
+}
 
 /** Story content is static. Normalize and segment it only when first needed. */
 export function getStoryText(story: Story) {

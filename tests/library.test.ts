@@ -10,7 +10,10 @@ test('Korean stories are available through the language filter', () => {
     { ...defaultFilters, language: 'ko' },
     {},
   );
-  assert.equal(result.length, 1);
+  assert.equal(
+    result.length,
+    stories.filter((story) => story.language === 'ko').length,
+  );
   assert.equal(result[0].title, '비를 멈추는 버튼');
 });
 
@@ -41,10 +44,21 @@ test('genre, language, and time filters intersect', () => {
     filterStories(stories, { ...filters, time: 'short' }, {}).length,
     0,
   );
-  assert.equal(
-    filterStories(stories, { ...defaultFilters, time: 'long' }, {}).length,
-    0,
-  );
+  for (const [time, minimum, maximum] of [
+    ['long', 11, 30],
+    ['extended', 31, 60],
+    ['epic', 61, Infinity],
+  ] as const) {
+    const result = filterStories(stories, { ...defaultFilters, time }, {});
+    assert.ok(result.length > 0);
+    assert.ok(
+      result.every(
+        (story) =>
+          story.estimatedMinutes >= minimum &&
+          story.estimatedMinutes <= maximum,
+      ),
+    );
+  }
 });
 
 test('search ignores case and accents', () => {
@@ -150,12 +164,13 @@ test('preferred language chooses a translated edition without hiding other stori
 });
 
 test('French can be filtered or preferred without duplicating story cards', () => {
-  assert.deepEqual(
-    filterStories(stories, { ...defaultFilters, language: 'fr' }, {}).map(
-      (story) => story.id,
-    ),
-    ['un-petit-jardin'],
+  const french = filterStories(
+    stories,
+    { ...defaultFilters, language: 'fr' },
+    {},
   );
+  assert.ok(french.some((story) => story.id === 'un-petit-jardin'));
+  assert.ok(french.every((story) => story.language === 'fr'));
   const result = filterStories(stories, defaultFilters, {}, ['fr']);
   assert.equal(
     result.length,
@@ -199,4 +214,37 @@ test('multiple reading languages prefer available editions and preserve an in-pr
     ['en', 'it'],
   );
   assert.equal(explicitFrench[0].language, 'fr');
+});
+
+test('remembered editions override automatic ranking but respect filters', () => {
+  const choices = { 'one-small-garden': 'un-piccolo-giardino' };
+  const selected = filterStories(
+    stories,
+    defaultFilters,
+    {},
+    ['en', 'it'],
+    choices,
+  );
+  assert.equal(
+    selected.find((s) => s.storyId === 'one-small-garden')?.id,
+    choices['one-small-garden'],
+  );
+  const english = filterStories(
+    stories,
+    { ...defaultFilters, language: 'en' },
+    {},
+    ['en', 'it'],
+    choices,
+  );
+  assert.equal(
+    english.find((s) => s.storyId === 'one-small-garden')?.language,
+    'en',
+  );
+  const stale = filterStories(stories, defaultFilters, {}, ['en'], {
+    'one-small-garden': 'deleted-edition',
+  });
+  assert.equal(
+    stale.find((s) => s.storyId === 'one-small-garden')?.language,
+    'en',
+  );
 });

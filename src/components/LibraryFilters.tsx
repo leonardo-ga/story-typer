@@ -102,7 +102,9 @@ export function LibraryFilters({ catalog, filters, onChange }: Props) {
                 { value: 'all', label: t('Any length') },
                 { value: 'short', label: t('Up to 5 min') },
                 { value: 'medium', label: t('6\u201310 min') },
-                { value: 'long', label: t('Over 10 min') },
+                { value: 'long', label: t('11–30 min') },
+                { value: 'extended', label: t('31–60 min') },
+                { value: 'epic', label: t('Over 60 min') },
               ]}
             />
           </div>

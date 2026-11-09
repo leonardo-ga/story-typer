@@ -5,6 +5,7 @@ import {
   activeParagraphIndex,
   analyzeTyping,
   segmentText,
+  firstCharacter,
   matchCharacter,
   applyErrorMode,
   typingCursor,
@@ -14,6 +15,16 @@ import {
   moveCaretToEnd,
   normalizeParagraphBreaks,
 } from '../src/typing.mjs';
+
+test('next-character lookup preserves complete graphemes in long passages', () => {
+  assert.equal(firstCharacter(''), '');
+  for (const character of ['e\u0301', '👩‍🚀', '한']) {
+    assert.equal(
+      firstCharacter(character + 'rest of the passage '.repeat(1000)),
+      character,
+    );
+  }
+});
 
 test('error policies distinguish blocking, irreversible typing, and optional corrections', () => {
   assert.equal(applyErrorMode('a', 'axc', 'abc', false, 'correct'), 'ax');

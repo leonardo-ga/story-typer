@@ -1,0 +1,254 @@
+.theme-forest {
+  --accent: #a9c49a;
+}
+.theme-winter {
+  --accent: #b5d2dc;
+}
+.theme-rail {
+  --accent: #d4ad86;
+}
+.theme-archive {
+  --accent: #d3bc92;
+}
+.forest-cover {
+  background: linear-gradient(#243c38, #142c2b);
+}
+.winter-cover {
+  background: linear-gradient(#3a505e, #243e49);
+}
+.forest-moon {
+  position: absolute;
+  width: 62px;
+  height: 62px;
+  background: #d5dbb5;
+  border-radius: 50%;
+  left: 63%;
+  top: 15%;
+  box-shadow: 0 0 60px #d5dbb51a;
+}
+.forest-trees {
+  position: absolute;
+  inset: 15% 6% 25%;
+  display: flex;
+  justify-content: space-around;
+  align-items: end;
+}
+.forest-trees i {
+  width: 16%;
+  height: 100%;
+  background: #0f2525;
+  clip-path: polygon(
+    50% 0,
+    100% 80%,
+    60% 80%,
+    60% 100%,
+    40% 100%,
+    40% 80%,
+    0 80%
+  );
+}
+.forest-trees i:nth-child(even) {
+  height: 75%;
+  background: #25483e;
+}
+.winter-cover .forest-trees i {
+  background: #9fb8bd;
+}
+.forest-path {
+  position: absolute;
+  inset: 53% 25% 22%;
+  background: #a9b48b44;
+  clip-path: polygon(48% 0, 58% 0, 90% 100%, 0 100%);
+}
+.forest-map {
+  position: absolute;
+  width: 50px;
+  height: 35px;
+  background: #d5c89d;
+  left: 38%;
+  bottom: 30%;
+  transform: rotate(-10deg);
+  border: 1px solid #776f50;
+  box-shadow: 14px 3px #b4ad83;
+}
+.rail-cover {
+  background: linear-gradient(#28394d, #8c6a5a);
+}
+.rail-hills {
+  position: absolute;
+  inset: 18% 0 25%;
+  background: #1c3439;
+  clip-path: polygon(
+    0 55%,
+    25% 8%,
+    55% 66%,
+    80% 20%,
+    100% 45%,
+    100% 100%,
+    0 100%
+  );
+}
+.rail-line {
+  position: absolute;
+  top: 58%;
+  width: 100%;
+  height: 5px;
+  background: #b5a28b;
+  transform: rotate(-5deg);
+}
+.rail-carriage {
+  position: absolute;
+  top: 36%;
+  left: 18%;
+  width: 65%;
+  height: 24%;
+  border-radius: 12px 24px 4px 4px;
+  background: #718a88;
+  border-bottom: 9px solid #1b3036;
+  display: flex;
+  gap: 9%;
+  padding: 13px;
+  transform: rotate(-5deg);
+}
+.rail-carriage i {
+  flex: 1;
+  background: #e7c67e;
+  border-radius: 3px;
+  box-shadow: 0 0 14px #e7c67e33;
+}
+.rail-signal {
+  position: absolute;
+  width: 4px;
+  height: 48px;
+  right: 10%;
+  top: 29%;
+  background: #82938f;
+}
+.rail-signal::before {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #c1c891;
+  border-radius: 50%;
+  left: -4px;
+}
+.archive-cover {
+  background: linear-gradient(135deg, #40392b, #1e2c2b);
+}
+.archive-shelves {
+  position: absolute;
+  inset: 12% 10% 35%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+.archive-shelves i {
+  height: 22%;
+  background: repeating-linear-gradient(
+    90deg,
+    #7e7151 0 9px,
+    #263c35 9px 14px,
+    #a18b60 14px 22px,
+    transparent 22px 26px
+  );
+  border-bottom: 5px solid #574d36;
+}
+.archive-desk {
+  position: absolute;
+  top: 65%;
+  left: 8%;
+  width: 84%;
+  height: 8px;
+  background: #9b825a;
+}
+.archive-lamp {
+  position: absolute;
+  width: 34px;
+  height: 48px;
+  right: 18%;
+  top: 46%;
+  border-left: 3px solid #b79d6e;
+}
+.archive-lamp::after {
+  content: '';
+  width: 48px;
+  height: 22px;
+  position: absolute;
+  top: -8px;
+  left: -25px;
+  border-radius: 20px 20px 0 0;
+  background: #acc3a0;
+  box-shadow: 0 20px 50px #ddc48744;
+}
+.archive-book {
+  position: absolute;
+  top: 58%;
+  left: 30%;
+  width: 65px;
+  height: 22px;
+  background: linear-gradient(90deg, #c8bb94 49%, #70664a 50%, #e0d2a8 51%);
+  transform: perspective(60px) rotateX(20deg);
+}
+.leaves-background i,
+.snow-background i,
+.dust-background i {
+  background: #b7c99888;
+  width: 6px;
+  height: 4px;
+  border-radius: 70% 0;
+  animation: woodland-drift calc(var(--duration) * 7) linear var(--delay)
+    infinite;
+}
+.snow-background i {
+  background: #d6e5eaaa;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+}
+.dust-background i {
+  background: #e7d2a577;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  animation-duration: calc(var(--duration) * 12);
+}
+.tracks-background i {
+  width: 40px;
+  height: 1px;
+  background: #d3ad7755;
+  animation: passing-light calc(var(--duration) * 3) linear var(--delay)
+    infinite;
+}
+@keyframes woodland-drift {
+  from {
+    transform: translate3d(0, -15vh, 0) rotate(0);
+  }
+  to {
+    transform: translate3d(25px, 110vh, 0) rotate(170deg);
+  }
+}
+@keyframes passing-light {
+  from {
+    transform: translate3d(20vw, 20vh, 0);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.5;
+  }
+  to {
+    transform: translate3d(-120vw, 35vh, 0);
+    opacity: 0;
+  }
+}
+.rain-paused i {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rain-background {
+    display: none;
+  }
+  .rain-background i {
+    animation: none;
+  }
+}

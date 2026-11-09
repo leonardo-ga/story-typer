@@ -6,7 +6,7 @@ import type { StoryGame } from '../hooks/useStoryGame';
 import { StoryResults } from './StoryResults';
 import { ReaderControls } from './ReaderControls';
 import { useCompositionInput } from '../hooks/useCompositionInput';
-import { matchCharacter } from '../typing.mjs';
+import { StoryParagraph } from './StoryParagraph';
 import type { Preferences } from '../preferences';
 
 export function StoryReader({
@@ -73,41 +73,38 @@ export function StoryReader({
                     }
                   }}
                 >
-                  {paragraphs.map((part, index) => (
-                    <section
-                      key={part.title}
-                      ref={index === scene ? activeParagraph : undefined}
-                      className={`stream-paragraph ${index === scene ? 'current-paragraph' : index < scene ? 'past-paragraph' : 'future-paragraph'}`}
-                      aria-current={index === scene ? 'step' : undefined}
-                      aria-label={t('Paragraph {count}', { count: index + 1 })}
-                    >
-                      <p
-                        className="passage"
-                        lang={selected.language}
-                        aria-hidden="true"
-                      >
-                        {part.characters.map(({ char, start }, index) => {
-                          const position = part.start + start;
-                          const typed =
-                            typedCharacters[part.characterStart + index];
-                          return (
-                            <span
-                              key={start}
-                              className={`${typed ? matchCharacter(typed.char, char, assistance) : 'pending'} ${position === cursorPosition ? 'cursor' : ''}`}
-                            >
-                              {char}
-                            </span>
-                          );
-                        })}
-                        {index === paragraphs.length - 1 &&
-                          cursorPosition >= storyText.length && (
-                            <>
-                              <span className="cursor"> </span>
-                            </>
-                          )}
-                      </p>
-                    </section>
-                  ))}
+                  {paragraphs.map((part, index) => {
+                    const first = typedCharacters[part.characterStart];
+                    const last =
+                      typedCharacters[
+                        Math.min(part.characterEnd, typedCharacters.length) - 1
+                      ];
+                    const typedText =
+                      first && last ? value.slice(first.start, last.end) : '';
+                    const cursor =
+                      cursorPosition >= part.start &&
+                      (cursorPosition < part.end ||
+                        index === paragraphs.length - 1)
+                        ? cursorPosition - part.start
+                        : -1;
+                    return (
+                      <StoryParagraph
+                        key={part.title}
+                        part={part}
+                        typedText={typedText}
+                        cursor={cursor}
+                        current={index === scene}
+                        past={index < scene}
+                        final={index === paragraphs.length - 1}
+                        language={selected.language}
+                        assistance={assistance}
+                        label={t('Paragraph {count}', { count: index + 1 })}
+                        activeRef={
+                          index === scene ? activeParagraph : undefined
+                        }
+                      />
+                    );
+                  })}
                 </div>
                 <textarea
                   lang={selected.language}

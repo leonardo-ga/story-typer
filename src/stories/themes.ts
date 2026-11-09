@@ -1,17 +1,37 @@
 interface ThemeDefinition {
   animation: {
-    kind: 'rain' | 'stars';
+    kind: 'rain' | 'stars' | 'leaves' | 'snow' | 'dust' | 'tracks';
     label: string;
     clearAtEnding: boolean;
   } | null;
   ambience: {
     frequency: number;
     gain: number;
-    texture: 'hum' | 'warmth' | 'clock' | null;
+    texture: 'hum' | 'warmth' | 'clock' | 'wind' | 'train' | 'paper' | null;
   };
 }
 
 export const themes = {
+  forest: {
+    animation: { kind: 'leaves', label: 'Leaves', clearAtEnding: false },
+    ambience: { frequency: 330, gain: 0.018, texture: 'wind' },
+  },
+  winter: {
+    animation: { kind: 'snow', label: 'Snow', clearAtEnding: false },
+    ambience: { frequency: 220, gain: 0.012, texture: 'wind' },
+  },
+  rail: {
+    animation: {
+      kind: 'tracks',
+      label: 'Passing lights',
+      clearAtEnding: false,
+    },
+    ambience: { frequency: 260, gain: 0.018, texture: 'train' },
+  },
+  archive: {
+    animation: { kind: 'dust', label: 'Dust motes', clearAtEnding: false },
+    ambience: { frequency: 500, gain: 0.006, texture: 'paper' },
+  },
   coast: {
     animation: { kind: 'rain', label: 'Rain', clearAtEnding: true },
     ambience: { frequency: 450, gain: 0.035, texture: null },

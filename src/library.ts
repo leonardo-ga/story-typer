@@ -5,7 +5,7 @@ export interface LibraryFilters {
   query: string;
   genre: string;
   language: string;
-  time: 'all' | 'short' | 'medium' | 'long';
+  time: 'all' | 'short' | 'medium' | 'long' | 'extended' | 'epic';
   progress: 'all' | 'new' | 'started' | 'finished';
   sort: 'collection' | 'title' | 'shortest';
 }
@@ -20,14 +20,13 @@ export const defaultFilters: LibraryFilters = {
 const searchable = (text: string) =>
   text.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase();
 
-export function filterStories(
+export function matchingEditions(
   stories: readonly Story[],
   filters: LibraryFilters,
   sessions: Record<string, Session>,
-  readingLanguages: readonly Language[] = [],
 ) {
   const query = searchable(filters.query.trim());
-  const matches = stories.filter((story) => {
+  return stories.filter((story) => {
     const session = sessions[story.id];
     if (filters.genre !== 'all' && story.genre !== filters.genre) return false;
     if (filters.language !== 'all' && story.language !== filters.language)
@@ -38,7 +37,17 @@ export function filterStories(
       (story.estimatedMinutes <= 5 || story.estimatedMinutes > 10)
     )
       return false;
-    if (filters.time === 'long' && story.estimatedMinutes <= 10) return false;
+    if (
+      filters.time === 'long' &&
+      (story.estimatedMinutes <= 10 || story.estimatedMinutes > 30)
+    )
+      return false;
+    if (
+      filters.time === 'extended' &&
+      (story.estimatedMinutes <= 30 || story.estimatedMinutes > 60)
+    )
+      return false;
+    if (filters.time === 'epic' && story.estimatedMinutes <= 60) return false;
     if (filters.progress === 'new' && session?.started) return false;
     if (
       filters.progress === 'started' &&
@@ -51,6 +60,16 @@ export function filterStories(
       searchable(`${story.title} ${story.description}`).includes(query)
     );
   });
+}
+
+export function filterStories(
+  stories: readonly Story[],
+  filters: LibraryFilters,
+  sessions: Record<string, Session>,
+  readingLanguages: readonly Language[] = [],
+  selectedEditions: Readonly<Record<string, string>> = {},
+) {
+  const matches = matchingEditions(stories, filters, sessions);
   // Keep editions together. Prefer the edition already in progress when no language is selected.
   const groups = new Map<string, Story>();
   const sessionRank = (story: Story) => {
@@ -58,6 +77,7 @@ export function filterStories(
     const languageRank = readingLanguages.includes(story.language) ? 4 : 0;
     return (
       languageRank +
+      (selectedEditions[story.storyId] === story.id ? 8 : 0) +
       (session?.started && !session.finished ? 2 : session?.finished ? 1 : 0)
     );
   };

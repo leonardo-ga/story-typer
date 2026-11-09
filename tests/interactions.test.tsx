@@ -560,6 +560,62 @@ test('Speed mode allows Korean syllable extension but still blocks corrections',
   }
 });
 
+test('a long story supports paragraph transitions, its new animation, pausing and exact completion', async () => {
+  localStorage.setItem(
+    'story-typer.preferences.v1',
+    JSON.stringify({
+      siteLanguage: 'en',
+      assistance: false,
+      errorMode: 'correct',
+    }),
+  );
+  window.history.replaceState(null, '', '/#the-cartographers-winter');
+  const story = stories.find(
+    (story) => story.id === 'the-cartographers-winter',
+  )!;
+  await mount(<App />);
+  assert.match(
+    container.querySelector('.story-nav')!.textContent!,
+    /The Cartographer/,
+  );
+  await act(async () =>
+    (
+      container.querySelector('.overlay > .primary') as HTMLButtonElement
+    ).click(),
+  );
+  const input = container.querySelector('textarea')!;
+  await act(async () => {
+    input.value = story.paragraphs[0].text;
+    Simulate.change(input);
+  });
+  await act(async () => Simulate.keyDown(input, { key: 'Enter' }));
+  assert.equal(
+    container.querySelector('.current-paragraph')!.getAttribute('aria-label'),
+    'Paragraph 2',
+  );
+  await act(async () =>
+    (
+      container.querySelector(
+        '[aria-label="Snow animation"]',
+      ) as HTMLButtonElement
+    ).click(),
+  );
+  assert.ok(container.querySelector('.snow-background'));
+  await act(async () =>
+    (container.querySelector('.pause-control') as HTMLButtonElement).click(),
+  );
+  assert.ok(container.querySelector('.snow-background.rain-paused'));
+  await act(async () =>
+    (container.querySelector('.pause-control') as HTMLButtonElement).click(),
+  );
+  await act(async () => {
+    input.value = story.paragraphs.map((part) => part.text).join(' ');
+    Simulate.change(input);
+  });
+  assert.ok(container.querySelector('.results'));
+  assert.match(container.querySelector('.results')!.textContent!, /100%/);
+});
+
 test('composition drafts are not committed until composition ends', async () => {
   const committed: string[] = [];
   function Harness() {
@@ -733,12 +789,22 @@ test('catalog language filters, empty results, and reset work in the interface',
   const storyCount = new Set(stories.map((story) => story.storyId)).size;
   assert.equal(container.querySelectorAll('.story-card').length, storyCount);
   await chooseOption(selectFor('Language'), 'it');
-  assert.equal(container.querySelectorAll('.story-card').length, 1);
+  assert.equal(
+    container.querySelectorAll('.story-card').length,
+    stories.filter((story) => story.language === 'it').length,
+  );
   assert.match(
     container.querySelector('.story-card h2')!.textContent!,
     /Un piccolo giardino/,
   );
   await chooseOption(selectFor('Genre'), 'Mystery');
+  await act(async () => {
+    const search = container.querySelector(
+      '.story-search input',
+    ) as HTMLInputElement;
+    search.value = 'no-such-story-for-filter-test';
+    Simulate.change(search);
+  });
   assert.equal(container.querySelectorAll('.story-card').length, 0);
   assert.ok(container.querySelector('.library-empty'));
   await act(async () =>
@@ -773,7 +839,10 @@ test('catalog filter choice survives opening an Italian edition and returning', 
     (container.querySelector('.filter-button') as HTMLButtonElement).click(),
   );
   assert.equal(languageSelect().value, 'it');
-  assert.equal(container.querySelectorAll('.story-card').length, 1);
+  assert.equal(
+    container.querySelectorAll('.story-card').length,
+    stories.filter((story) => story.language === 'it').length,
+  );
 });
 
 test('similar letters render yellow and can complete an assisted attempt', async () => {
@@ -1684,4 +1753,55 @@ test('info tooltips are positioned above their trigger and stay inside the modal
     parseFloat(tooltip.style.left) + parseFloat(tooltip.style.width) <= 728,
   );
   assert.equal(container.querySelectorAll('dialog').length, 1);
+});
+
+test('story edition buttons update the card and remember the choice', async () => {
+  localStorage.setItem(
+    'story-typer.preferences.v1',
+    JSON.stringify({ readingLanguages: ['en', 'it'] }),
+  );
+  await mount(<App />);
+  const group = container
+    .querySelector('[aria-label="Your languages"]')!
+    .closest('article')!;
+  assert.ok(group);
+  const preferred = group.querySelector('[aria-label="Your languages"]')!;
+  const other = group.querySelector(
+    '[aria-label="Other available languages"]',
+  )!;
+  assert.deepEqual(
+    [...preferred.querySelectorAll('button')].map((button) => button.lang),
+    ['en', 'it'],
+  );
+  assert.deepEqual(
+    [...other.querySelectorAll('button')].map((button) => button.lang),
+    ['fr'],
+  );
+  const italian = [...group.querySelectorAll<HTMLButtonElement>('button')].find(
+    (button) => button.lang === 'it',
+  )!;
+  await act(async () => italian.click());
+  const card = italian.closest('article')!;
+  assert.equal(card.querySelector('h2')?.textContent, 'Un piccolo giardino');
+  assert.equal(
+    card.querySelector('a.primary')?.getAttribute('href'),
+    '#un-piccolo-giardino',
+  );
+  assert.equal(italian.getAttribute('aria-pressed'), 'true');
+  assert.ok(italian.closest('.tags'));
+  assert.ok(
+    card.querySelector('.primary')!.compareDocumentPosition(other) &
+      dom.window.Node.DOCUMENT_POSITION_FOLLOWING,
+  );
+  assert.equal(window.location.hash, '');
+  await act(async () => root!.unmount());
+  root = undefined;
+  await mount(<App />);
+  const restored = container
+    .querySelector('[aria-label="Your languages"]')!
+    .closest('article')!;
+  assert.equal(
+    restored.querySelector('[aria-pressed="true"]')?.getAttribute('lang'),
+    'it',
+  );
 });

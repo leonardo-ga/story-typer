@@ -11,6 +11,7 @@ import {
   moveCaretToEnd,
   normalizeParagraphBreaks,
   segmentText,
+  firstCharacter,
 } from '../typing.mjs';
 import type { Session } from '../types';
 import { useStoryAudio } from './useStoryAudio';
@@ -78,9 +79,8 @@ export function useStoryGame({
   );
   const { mistake, correct: matching } = analysis;
   const expectedCharacter =
-    mistake < 0 ? '' : (segmentText(storyText.slice(mistake))[0]?.char ?? '');
-  const nextCharacter =
-    segmentText(storyText.slice(cursor.offset))[0]?.char ?? '';
+    mistake < 0 ? '' : firstCharacter(storyText.slice(mistake));
+  const nextCharacter = firstCharacter(storyText.slice(cursor.offset));
   useEffect(() => {
     if (!started) {
       setAssistance(defaultAssistance);

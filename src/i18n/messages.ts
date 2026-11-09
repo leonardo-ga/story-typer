@@ -1,6 +1,10 @@
 // English source messages are the keys. Every exposed site language supplies
 // the same keys; new UI copy cannot silently bypass the translation catalog.
 export const italian = {
+  'Story language': 'Lingua della storia',
+  'Your languages': 'Le tue lingue',
+  'Read in': 'Leggi in',
+  'Other available languages': 'Altre lingue disponibili',
   'Site language': 'Lingua del sito',
   'Ready to begin': 'Puoi iniziare',
   'Adjust your preferences if needed.': 'Modifica le preferenze se necessario.',
@@ -68,6 +72,21 @@ export const italian = {
   'Story effects': 'Effetti della storia',
   'Typing sounds': 'Suoni di digitazione',
   'Rain animation': 'Animazione della pioggia',
+  '{effect} animation': 'Animazione: {effect}',
+  Rain: 'Pioggia',
+  Stardust: 'Polvere di stelle',
+  Leaves: 'Foglie',
+  Snow: 'Neve',
+  'Passing lights': 'Luci in movimento',
+  'Dust motes': 'Pulviscolo',
+  'Moonlit trees, a winding path, and an unfolded map':
+    'Alberi al chiaro di luna, un sentiero e una mappa aperta',
+  'A snowy forest path beneath a pale winter moon':
+    'Un sentiero innevato sotto la luna invernale',
+  'A lit railway carriage crossing a valley at dusk':
+    'Un vagone illuminato attraversa una valle al crepuscolo',
+  'An open book beneath a lamp in a quiet archive':
+    'Un libro aperto sotto una lampada in un archivio silenzioso',
   'Stardust animation': 'Animazione della polvere di stelle',
   'Ambient sound': 'Suono ambientale',
   'STORIES AT YOUR FINGERTIPS': 'STORIE SOTTO LE DITA',
@@ -109,6 +128,7 @@ export const italian = {
   'Title A–Z': 'Titolo A–Z',
   'Shortest first': 'Prima le più brevi',
   Mystery: 'Mistero',
+  Adventure: 'Avventura',
   'Science fiction': 'Fantascienza',
   Fantasy: 'Fantasia',
   'Comic fantasy': 'Fantasia umoristica',
@@ -116,6 +136,11 @@ export const italian = {
   '{count} PARAGRAPHS': '{count} PARAGRAFI',
   'Estimated typing time; varies with your speed':
     'Tempo di digitazione stimato; varia con la tua velocità',
+  'Estimated at {speed} WPM; varies with your speed':
+    'Stima a {speed} parole/min; varia con la tua velocità',
+  '11–30 min': '11–30 min',
+  '31–60 min': '31–60 min',
+  'Over 60 min': 'Oltre 60 min',
   'Showing {language} for these filters.':
     'Con questi filtri viene mostrata l’edizione in {language}.',
   'Not yet in your reading languages. Available in {language}.':

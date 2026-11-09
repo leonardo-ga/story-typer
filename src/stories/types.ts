@@ -10,6 +10,7 @@ export interface Story {
   title: string;
   genre: string;
   estimatedMinutes: number;
+  estimateWpm?: number;
   description: string;
   caption: string;
   setting: string;

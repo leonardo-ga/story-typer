@@ -21,6 +21,22 @@ export function createAmbience(theme: Theme) {
   gain.gain.value = level;
   source.connect(filter).connect(gain).connect(context.destination);
   source.start();
+  if (texture === 'wind' || texture === 'paper' || texture === 'train') {
+    const movement = context.createOscillator();
+    movement.frequency.value = texture === 'train' ? 3.2 : 0.09;
+    const depth = context.createGain();
+    depth.gain.value = level * (texture === 'train' ? 0.45 : 0.2);
+    movement.connect(depth).connect(gain.gain);
+    movement.start();
+    if (texture === 'train') {
+      const motor = context.createOscillator();
+      motor.frequency.value = 72;
+      const volume = context.createGain();
+      volume.gain.value = 0.007;
+      motor.connect(volume).connect(context.destination);
+      motor.start();
+    }
+  }
   if (texture === 'hum') {
     const hum = context.createOscillator();
     hum.frequency.value = 55;

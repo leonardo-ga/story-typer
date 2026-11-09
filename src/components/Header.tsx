@@ -25,7 +25,7 @@ export function Header({
   preferencesButton: RefObject<HTMLButtonElement>;
   preferencesSuggestion?: ReactNode;
 }) {
-  const { t } = useI18n();
+  const { t, text } = useI18n();
   const {
     inStory,
     selected,
@@ -97,11 +97,9 @@ export function Header({
             />
             {animation && (
               <EffectToggle
-                label={
-                  animation.kind === 'rain'
-                    ? t('Rain animation')
-                    : t('Stardust animation')
-                }
+                label={t('{effect} animation', {
+                  effect: text(animation.label),
+                })}
                 icon={animation.kind}
                 active={rain}
                 onToggle={() => {

@@ -1,7 +1,7 @@
 import { useI18n } from '../i18n/I18nProvider';
 import type { Story } from '../stories/types';
 import type { StoryCatalog } from '../stories/catalog';
-import { getStoryText } from '../stories/text';
+import { getStoryPlainText } from '../stories/text';
 import type { Session } from '../types';
 import type { Preferences } from '../preferences';
 import { languageNames } from '../languages';
@@ -14,6 +14,8 @@ interface Props {
   catalog: StoryCatalog;
   saved?: Session;
   preferences: Preferences;
+  availableEditions: readonly Story[];
+  onSelectEdition: (editionId: string) => void;
 }
 
 function savedProgress(saved: Session | undefined, target: string) {
@@ -30,12 +32,24 @@ function savedProgress(saved: Session | undefined, target: string) {
   return Math.round((count / analysis.total) * 100);
 }
 
-export function StoryCard({ story, catalog, saved, preferences }: Props) {
+export function StoryCard({
+  story,
+  catalog,
+  saved,
+  preferences,
+  availableEditions,
+  onSelectEdition,
+}: Props) {
   const { t, text: localize } = useI18n();
-  const { text } = getStoryText(story);
+  const text = getStoryPlainText(story);
   const editions = catalog.editionsFor(story.storyId);
-  const otherEditions = editions.filter((edition) => edition.id !== story.id);
   const readingLanguages = preferences.readingLanguages;
+  const preferredEditions = availableEditions.filter((edition) =>
+    readingLanguages.includes(edition.language),
+  );
+  const otherEditions = availableEditions.filter(
+    (edition) => !readingLanguages.includes(edition.language),
+  );
   return (
     <article className={`story-card theme-${story.theme}`}>
       <StoryCover story={story} />
@@ -49,10 +63,46 @@ export function StoryCard({ story, catalog, saved, preferences }: Props) {
           <span>
             {t('{count} PARAGRAPHS', { count: story.paragraphs.length })}
           </span>
-          <span title={t('Estimated typing time; varies with your speed')}>
+          <span
+            title={
+              story.estimateWpm
+                ? t('Estimated at {speed} WPM; varies with your speed', {
+                    speed: story.estimateWpm,
+                  })
+                : t('Estimated typing time; varies with your speed')
+            }
+          >
             ~{story.estimatedMinutes} MIN
           </span>
-          <span lang={story.language}>{languageNames[story.language]}</span>
+          {editions.length > 1 && preferredEditions.length > 0 ? (
+            <div
+              className="story-language-picker"
+              role="group"
+              aria-label={t('Your languages')}
+            >
+              <div className="story-language-label">{t('Read in')}</div>
+              <div className="story-language-segments">
+                {preferredEditions.map((edition) => (
+                  <button
+                    type="button"
+                    key={edition.id}
+                    lang={edition.language}
+                    aria-pressed={edition.id === story.id}
+                    onClick={() => onSelectEdition(edition.id)}
+                  >
+                    {languageNames[edition.language]}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <span lang={story.language}>{languageNames[story.language]}</span>
+          )}
+          {!preferredEditions.some((edition) => edition.id === story.id) &&
+            preferredEditions.length > 0 &&
+            editions.length > 1 && (
+              <span lang={story.language}>{languageNames[story.language]}</span>
+            )}
         </div>
         {readingLanguages.length > 0 &&
           !readingLanguages.includes(story.language) && (
@@ -78,21 +128,23 @@ export function StoryCard({ story, catalog, saved, preferences }: Props) {
               : t('Explore story')}{' '}
           <span>→</span>
         </a>
-        {otherEditions.length > 0 && (
+        {editions.length > 1 && otherEditions.length > 0 && (
           <div
             className="story-editions"
-            aria-label={t('Other language editions')}
+            role="group"
+            aria-label={t('Other available languages')}
           >
             <span>{t('Also in')}</span>
             {otherEditions.map((edition) => (
-              <a
+              <button
+                type="button"
                 key={edition.id}
-                href={`#${edition.id}`}
                 lang={edition.language}
-                aria-label={`${edition.title} — ${languageNames[edition.language]}`}
+                aria-pressed={edition.id === story.id}
+                onClick={() => onSelectEdition(edition.id)}
               >
                 {languageNames[edition.language]}
-              </a>
+              </button>
             ))}
           </div>
         )}

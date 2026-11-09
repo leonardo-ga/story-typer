@@ -6,6 +6,7 @@ import { theOvenInspector } from './the-oven-inspector';
 import { theLastRepair } from './the-last-repair';
 import type { Story } from './types';
 import { theRainButton } from './the-rain-button.ko';
+import { longFormStories } from './long-form-index';
 
 export const stories: Story[] = [
   lastFrequency,
@@ -15,4 +16,5 @@ export const stories: Story[] = [
   theOvenInspector,
   theLastRepair,
   theRainButton,
+  ...longFormStories,
 ];

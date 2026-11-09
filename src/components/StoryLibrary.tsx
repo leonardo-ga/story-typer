@@ -1,9 +1,11 @@
+import { useStoryEditions } from '../hooks/useStoryEditions';
 import { useI18n } from '../i18n/I18nProvider';
 import type { StoryCatalog } from '../stories/catalog';
 import { StoryCard } from './StoryCard';
 import type { Session } from '../types';
 import {
   filterStories,
+  matchingEditions,
   defaultFilters,
   type LibraryFilters as Filters,
 } from '../library';
@@ -24,11 +26,14 @@ export function StoryLibrary({
   preferences: Preferences;
 }) {
   const { t } = useI18n();
+  const { selectedEditions, selectEdition } = useStoryEditions();
+  const eligibleEditions = matchingEditions(catalog.stories, filters, sessions);
   const visibleStories = filterStories(
     catalog.stories,
     filters,
     sessions,
     preferences.readingLanguages,
+    selectedEditions,
   );
   const { storyCount } = catalog;
   return (
@@ -61,7 +66,13 @@ export function StoryLibrary({
         </div>
         {visibleStories.map((story) => (
           <StoryCard
-            key={story.id}
+            key={story.storyId}
+            availableEditions={eligibleEditions.filter(
+              (edition) => edition.storyId === story.storyId,
+            )}
+            onSelectEdition={(editionId) =>
+              selectEdition(story.storyId, editionId)
+            }
             story={story}
             catalog={catalog}
             saved={sessions[story.id]}
