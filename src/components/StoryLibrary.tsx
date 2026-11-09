@@ -27,7 +27,12 @@ export function StoryLibrary({
 }) {
   const { t } = useI18n();
   const { selectedEditions, selectEdition } = useStoryEditions();
-  const eligibleEditions = matchingEditions(catalog.stories, filters, sessions);
+  const eligibleEditions = matchingEditions(
+    catalog.stories,
+    filters,
+    sessions,
+    preferences.readingLanguages,
+  );
   const visibleStories = filterStories(
     catalog.stories,
     filters,

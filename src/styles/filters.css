@@ -123,48 +123,43 @@
   font-size: 11px;
   color: var(--muted);
 }
-.story-language-picker button {
-  border: 1px solid transparent;
-  border-radius: 4px;
-  padding: 5px 8px;
-  background: transparent;
-  color: var(--muted);
-  font: inherit;
-  cursor: pointer;
+.story-card-body .tags {
+  align-items: center;
 }
 .story-language-picker {
-  letter-spacing: 0;
+  gap: 0;
+  border: 1px solid #33403a;
+  border-radius: 3px;
+  overflow: hidden;
 }
-.story-language-label {
-  color: var(--muted);
-  font-size: 10px;
+.story-language-picker button {
+  border: 0;
+  border-radius: 0;
+  padding: 5px 9px;
+  background: transparent;
+  color: #9aa99f;
+  opacity: 0.25;
+  font: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
 }
-.story-language-segments {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 3px;
-  padding: 3px;
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  background: rgb(0 0 0 / 12%);
+.story-language-picker button + button {
+  border-left: 1px solid #33403a;
 }
-.story-language-picker button::before {
-  content: '';
-  display: inline-block;
-  width: 10px;
-  margin-right: 4px;
-}
-.story-language-picker button[aria-pressed='true']::before {
-  content: '✓';
-}
-.story-language-picker button:hover,
-.story-language-picker button[aria-pressed='true'] {
-  color: var(--accent);
-  border-color: var(--accent);
+.story-language-picker button:hover {
+  color: #9aa99f;
+  opacity: 1;
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 .story-language-picker button[aria-pressed='true'] {
-  background: color-mix(in srgb, var(--accent) 18%, transparent);
-  font-weight: 600;
+  color: #9aa99f;
+  background: transparent;
+  opacity: 1;
+}
+.story-language-picker button:focus-visible {
+  opacity: 1;
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
 }
 .story-editions button {
   padding: 0;
@@ -180,7 +175,6 @@
 .story-editions button[aria-pressed='true'] {
   color: var(--accent);
 }
-.story-language-picker button:focus-visible,
 .story-editions button:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;

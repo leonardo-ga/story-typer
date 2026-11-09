@@ -83,6 +83,7 @@ export function LibraryFilters({ catalog, filters, onChange }: Props) {
               value={filters.language}
               onChange={(value) => change('language', value)}
               options={[
+                { value: 'preferred', label: t('My languages') },
                 { value: 'all', label: t('All languages') },
                 ...languages.map((language) => ({
                   value: language,

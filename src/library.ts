@@ -24,12 +24,24 @@ export function matchingEditions(
   stories: readonly Story[],
   filters: LibraryFilters,
   sessions: Record<string, Session>,
+  readingLanguages: readonly Language[] = [],
 ) {
   const query = searchable(filters.query.trim());
+  const preferredStories = new Set(
+    stories
+      .filter((story) => readingLanguages.includes(story.language))
+      .map((story) => story.storyId),
+  );
   return stories.filter((story) => {
     const session = sessions[story.id];
     if (filters.genre !== 'all' && story.genre !== filters.genre) return false;
-    if (filters.language !== 'all' && story.language !== filters.language)
+    if (filters.language === 'preferred') {
+      if (readingLanguages.length > 0 && !preferredStories.has(story.storyId))
+        return false;
+    } else if (
+      filters.language !== 'all' &&
+      story.language !== filters.language
+    )
       return false;
     if (filters.time === 'short' && story.estimatedMinutes > 5) return false;
     if (
@@ -69,7 +81,12 @@ export function filterStories(
   readingLanguages: readonly Language[] = [],
   selectedEditions: Readonly<Record<string, string>> = {},
 ) {
-  const matches = matchingEditions(stories, filters, sessions);
+  const matches = matchingEditions(
+    stories,
+    filters,
+    sessions,
+    readingLanguages,
+  );
   // Keep editions together. Prefer the edition already in progress when no language is selected.
   const groups = new Map<string, Story>();
   const sessionRank = (story: Story) => {

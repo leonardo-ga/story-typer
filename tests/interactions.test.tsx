@@ -786,8 +786,16 @@ test('catalog language filters, empty results, and reset work in the interface',
     [...container.querySelectorAll('.filter-field')]
       .find((item) => item.querySelector('span')?.textContent === label)!
       .querySelector<HTMLButtonElement>('.single-select-trigger')!;
-  const storyCount = new Set(stories.map((story) => story.storyId)).size;
+  const storyCount = new Set(
+    stories
+      .filter((story) => story.language === 'en')
+      .map((story) => story.storyId),
+  ).size;
   assert.equal(container.querySelectorAll('.story-card').length, storyCount);
+  assert.equal(
+    container.querySelector('.filter-button span')?.textContent,
+    '1',
+  );
   await chooseOption(selectFor('Language'), 'it');
   assert.equal(
     container.querySelectorAll('.story-card').length,
@@ -812,7 +820,11 @@ test('catalog language filters, empty results, and reset work in the interface',
       container.querySelector('.library-empty button') as HTMLButtonElement
     ).click(),
   );
-  assert.equal(container.querySelectorAll('.story-card').length, storyCount);
+  assert.equal(
+    container.querySelectorAll('.story-card').length,
+    new Set(stories.map((story) => story.storyId)).size,
+  );
+  assert.equal(container.querySelector('.filter-button span'), null);
   assert.equal(selectFor('Language').value, 'all');
 });
 
@@ -938,7 +950,7 @@ test('strict mode rejects base letters but offers the exact accent button', asyn
   }
 });
 
-test('preferred language is remembered across mounts without hiding fallback editions', async () => {
+test('preferred language is remembered and filters the library immediately', async () => {
   await mount(<App />);
   await act(async () =>
     (container.querySelector('.settings-trigger') as HTMLButtonElement).click(),
@@ -964,9 +976,13 @@ test('preferred language is remembered across mounts without hiding fallback edi
   assert.match(container.textContent!, /Un piccolo giardino/);
   assert.equal(
     container.querySelectorAll('.story-card').length,
-    new Set(stories.map((story) => story.storyId)).size,
+    new Set(
+      stories
+        .filter((story) => story.language === 'it')
+        .map((story) => story.storyId),
+    ).size,
   );
-  assert.ok(container.querySelector('.edition-fallback'));
+  assert.equal(container.querySelector('.edition-fallback'), null);
   await act(async () => root!.unmount());
   root = undefined;
   await mount(<App />);

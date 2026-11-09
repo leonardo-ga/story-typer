@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { stories } from '../src/stories';
 import { defaultFilters, filterStories } from '../src/library';
+const preferenceDefaults = { ...defaultFilters, language: 'preferred' };
 import type { Session } from '../src/types';
 
 test('Korean stories are available through the language filter', () => {
@@ -247,4 +248,28 @@ test('remembered editions override automatic ranking but respect filters', () =>
     stale.find((s) => s.storyId === 'one-small-garden')?.language,
     'en',
   );
+});
+
+test('My languages filters families across multiple preferences and follows changes', () => {
+  for (const languages of [['en', 'it'], ['fr'], []] as const) {
+    const result = filterStories(stories, preferenceDefaults, {}, languages);
+    const expected = new Set(
+      stories
+        .filter(
+          (story) =>
+            languages.length === 0 ||
+            (languages as readonly string[]).includes(story.language),
+        )
+        .map((story) => story.storyId),
+    );
+    assert.deepEqual(new Set(result.map((story) => story.storyId)), expected);
+  }
+  const explicit = filterStories(
+    stories,
+    { ...preferenceDefaults, language: 'ko' },
+    {},
+    ['it'],
+  );
+  assert.ok(explicit.length > 0);
+  assert.ok(explicit.every((story) => story.language === 'ko'));
 });

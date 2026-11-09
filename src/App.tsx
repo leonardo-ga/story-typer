@@ -33,7 +33,10 @@ function AppContent({
     defaultAssistance: preferences.preferences.assistance,
     defaultErrorMode: preferences.preferences.errorMode,
   });
-  const [filters, setFilters] = useState({ ...defaultFilters });
+  const [filters, setFilters] = useState({
+    ...defaultFilters,
+    language: 'preferred',
+  });
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const preferencesButton = useRef<HTMLButtonElement>(null);
   const suggestion = usePreferencesSuggestion(

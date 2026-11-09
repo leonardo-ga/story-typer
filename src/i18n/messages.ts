@@ -113,6 +113,7 @@ export const italian = {
   'All genres': 'Tutti i generi',
   Language: 'Lingua',
   'All languages': 'Tutte le lingue',
+  'My languages': 'Le mie lingue',
   'Typing time': 'Tempo di digitazione',
   'Any length': 'Qualsiasi durata',
   'Up to 5 min': 'Fino a 5 min',

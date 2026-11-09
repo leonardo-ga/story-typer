@@ -80,20 +80,17 @@ export function StoryCard({
               role="group"
               aria-label={t('Your languages')}
             >
-              <div className="story-language-label">{t('Read in')}</div>
-              <div className="story-language-segments">
-                {preferredEditions.map((edition) => (
-                  <button
-                    type="button"
-                    key={edition.id}
-                    lang={edition.language}
-                    aria-pressed={edition.id === story.id}
-                    onClick={() => onSelectEdition(edition.id)}
-                  >
-                    {languageNames[edition.language]}
-                  </button>
-                ))}
-              </div>
+              {preferredEditions.map((edition) => (
+                <button
+                  type="button"
+                  key={edition.id}
+                  lang={edition.language}
+                  aria-pressed={edition.id === story.id}
+                  onClick={() => onSelectEdition(edition.id)}
+                >
+                  {languageNames[edition.language]}
+                </button>
+              ))}
             </div>
           ) : (
             <span lang={story.language}>{languageNames[story.language]}</span>
