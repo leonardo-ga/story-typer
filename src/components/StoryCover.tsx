@@ -1,6 +1,26 @@
 import type { Story } from '../stories/types';
 
 export function StoryCover({ story }: { story: Story }) {
+  if (story.theme === 'city') {
+    return (
+      <div
+        className="art cover-art city-cover"
+        role="img"
+        aria-label="A yellow button beneath a bus shelter, with raindrops suspended in the night air"
+      >
+        <div className="city-windows" />
+        <div className="city-rain" />
+        <div className="bus-shelter">
+          <div className="bus-route" />
+          <div className="rain-button" />
+        </div>
+        <div className="art-caption">
+          <span>{story.setting}</span>
+          <strong>{story.caption}</strong>
+        </div>
+      </div>
+    );
+  }
   if (story.theme === 'bakery' || story.theme === 'workshop') {
     return (
       <div

@@ -1,7 +1,19 @@
 import type { StoryGame } from '../hooks/useStoryGame';
 import { EffectToggle } from './EffectToggle';
+import { SettingsIcon } from './SettingsIcon';
+import type { RefObject } from 'react';
 
-export function Header({ game }: { game: StoryGame }) {
+export function Header({
+  game,
+  onOpenPreferences,
+  preferencesOpen,
+  preferencesButton,
+}: {
+  game: StoryGame;
+  onOpenPreferences: () => void;
+  preferencesOpen: boolean;
+  preferencesButton: RefObject<HTMLButtonElement>;
+}) {
   const {
     inStory,
     selected,
@@ -21,42 +33,55 @@ export function Header({ game }: { game: StoryGame }) {
         </span>
         <span className="brand-name">story typer</span>
       </a>
-      {inStory ? (
-        <div
-          className="experience-controls"
-          role="group"
-          aria-label="Story effects"
-        >
-          <EffectToggle
-            label="Typing sounds"
-            icon="keyboard"
-            active={typingSound}
-            onToggle={toggleTypingSound}
-          />
-          {selected.effect && (
+      <div className="header-actions">
+        {inStory ? (
+          <div
+            className="experience-controls"
+            role="group"
+            aria-label="Story effects"
+          >
             <EffectToggle
-              label={`${selected.effect} animation`}
-              icon={selected.theme === 'orbit' ? 'stars' : 'rain'}
-              active={rain}
+              label="Typing sounds"
+              icon="keyboard"
+              active={typingSound}
+              onToggle={toggleTypingSound}
+            />
+            {selected.effect && (
+              <EffectToggle
+                label={`${selected.effect} animation`}
+                icon={selected.theme === 'orbit' ? 'stars' : 'rain'}
+                active={rain}
+                onToggle={() => {
+                  setRain(!rain);
+                  focusTyping();
+                }}
+              />
+            )}
+            <EffectToggle
+              label="Ambient sound"
+              icon="sound"
+              active={sound}
               onToggle={() => {
-                setRain(!rain);
+                setSound(!sound);
                 focusTyping();
               }}
             />
-          )}
-          <EffectToggle
-            label="Ambient sound"
-            icon="sound"
-            active={sound}
-            onToggle={() => {
-              setSound(!sound);
-              focusTyping();
-            }}
-          />
-        </div>
-      ) : (
-        <span className="library-label">STORIES AT YOUR FINGERTIPS</span>
-      )}
+          </div>
+        ) : (
+          <span className="library-label">STORIES AT YOUR FINGERTIPS</span>
+        )}
+        <button
+          ref={preferencesButton}
+          type="button"
+          className="effect-toggle settings-trigger"
+          aria-label="Preferences"
+          aria-haspopup="dialog"
+          aria-expanded={preferencesOpen}
+          onClick={onOpenPreferences}
+        >
+          <SettingsIcon />
+        </button>
+      </div>
     </header>
   );
 }

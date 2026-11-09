@@ -2,9 +2,11 @@ import type { Story } from './types';
 
 export const theLastRepair = {
   id: 'the-last-repair',
+  storyId: 'the-last-repair',
+  language: 'en',
   title: 'The Last Repair',
   genre: 'Slice of life',
-  duration: '~9 min',
+  estimatedMinutes: 9,
   description:
     "On the last afternoon in your father's violin workshop, a boy brings in a broken instrument. The moving van can wait.",
   caption: 'One more thing before we go.',

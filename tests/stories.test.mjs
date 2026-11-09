@@ -16,7 +16,8 @@ test('stories have unique routes and complete presentation metadata', () => {
       'title',
       'description',
       'genre',
-      'duration',
+      'language',
+      'storyId',
       'theme',
       'caption',
       'setting',
@@ -26,8 +27,27 @@ test('stories have unique routes and complete presentation metadata', () => {
       assert.ok(story[key]?.trim(), `${story.id}: missing ${key}`);
     }
     assert.ok(story.paragraphs.length > 0);
+    assert.ok(story.estimatedMinutes > 0);
     assert.ok(story.effect === null || typeof story.effect === 'string');
   }
+});
+
+test('each language edition has a unique route and independent session key', () => {
+  const gardenEditions = stories.filter(
+    (story) => story.storyId === 'one-small-garden',
+  );
+  assert.deepEqual(
+    new Set(gardenEditions.map((story) => story.language)),
+    new Set(['en', 'it', 'fr']),
+  );
+  assert.equal(
+    new Set(gardenEditions.map((story) => story.id)).size,
+    gardenEditions.length,
+  );
+  assert.notEqual(
+    gardenEditions[0].paragraphs[0].text,
+    gardenEditions[1].paragraphs[0].text,
+  );
 });
 
 for (const story of stories) {

@@ -2,9 +2,11 @@ import type { Story } from './types';
 
 export const oneSmallGarden = {
   id: 'one-small-garden',
+  storyId: 'one-small-garden',
+  language: 'en',
   title: 'One Small Garden',
   genre: 'Science fiction',
-  duration: '~5 min',
+  estimatedMinutes: 5,
   description:
     'Far from Earth, a maintenance robot discovers something unexpected in a deserted greenhouse. A gentle story about finding a reason to grow.',
   caption: 'A little green in the great unknown.',

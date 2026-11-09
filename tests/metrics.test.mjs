@@ -5,12 +5,49 @@ import {
   activeParagraphIndex,
   analyzeTyping,
   segmentText,
+  matchCharacter,
+  applyErrorMode,
+  typingCursor,
   buildStoryText,
   constrainTyping,
   countEdit,
   moveCaretToEnd,
   normalizeParagraphBreaks,
 } from '../src/typing.mjs';
+
+test('error policies distinguish blocking, irreversible typing, and optional corrections', () => {
+  assert.equal(applyErrorMode('a', 'axc', 'abc', false, 'correct'), 'ax');
+  assert.equal(applyErrorMode('ax', 'a', 'abc', false, 'forward'), 'ax');
+  assert.equal(applyErrorMode('ax', 'ab', 'abc', false, 'forward'), 'ax');
+  assert.equal(applyErrorMode('ax', 'a', 'abc', false, 'free'), 'a');
+  assert.equal(applyErrorMode('', 'xyzextra', 'abc', false, 'free'), 'xyz');
+  assert.equal(typingCursor('😀x cd', 'ab cd').count, 5);
+  assert.equal(typingCursor('😀x cd', 'ab cd').offset, 5);
+  const parts = buildStoryText([{ text: 'ab' }, { text: 'cd' }]);
+  assert.equal(normalizeParagraphBreaks('😀x\n', parts), '😀x ');
+  assert.equal(analyzeTyping('😀x cd', 'ab cd').correct, 3);
+});
+
+test('assisted typing accepts defined equivalents without accepting unrelated letters or case', () => {
+  assert.equal(matchCharacter('a', 'à', true), 'assisted');
+  assert.equal(matchCharacter('e', 'È', true), 'incorrect');
+  assert.equal(matchCharacter('a', 'à', false), 'incorrect');
+  assert.equal(matchCharacter('а', 'à', true), 'incorrect');
+  assert.equal(matchCharacter("'", '’', true), 'assisted');
+  assert.equal(matchCharacter('-', '—', true), 'assisted');
+  assert.equal(matchCharacter('b', 'à', true), 'incorrect');
+  assert.equal(constrainTyping('', 'da qua', 'dà qua', true), 'da qua');
+  assert.deepEqual(analyzeTyping('da qua', 'dà qua', true), {
+    correct: 6,
+    mistake: -1,
+    total: 6,
+  });
+  assert.deepEqual(countEdit('', 'da', 'dà', true), {
+    attempts: 2,
+    correct: 2,
+  });
+  assert.deepEqual(countEdit('', 'da', 'dà'), { attempts: 2, correct: 1 });
+});
 
 test('emoji and combined characters count as complete visible characters', () => {
   const target = 'A😀👩‍🔧é';

@@ -1,10 +1,19 @@
 import { moveCaretToEnd } from '../typing.mjs';
+import { KeyboardCompatibility } from './KeyboardCompatibility';
 import type { StoryGame } from '../hooks/useStoryGame';
 import { StoryResults } from './StoryResults';
 import { ReaderControls } from './ReaderControls';
 import { useCompositionInput } from '../hooks/useCompositionInput';
+import { matchCharacter } from '../typing.mjs';
+import type { Preferences } from '../preferences';
 
-export function StoryReader({ game }: { game: StoryGame }) {
+export function StoryReader({
+  game,
+  preferences,
+}: {
+  game: StoryGame;
+  preferences: Preferences;
+}) {
   const {
     selected,
     finished,
@@ -16,19 +25,31 @@ export function StoryReader({ game }: { game: StoryGame }) {
     scene,
     activeParagraph,
     value,
+    typedCharacters,
+    cursorPosition,
+    errorMode,
     storyText,
     change,
     mistake,
     expectedCharacter,
+    assistance,
     progress,
     setStarted,
     setPaused,
   } = game;
+  const specialCharacters = [
+    ...new Set(
+      paragraphs
+        .flatMap((part) => part.characters.map((character) => character.char))
+        .filter((char) => /\p{M}/u.test(char.normalize('NFD'))),
+    ),
+  ];
   const compositionInput = useCompositionInput(
     value,
     change,
     paused,
     selected.id,
+    errorMode === 'forward',
   );
   return (
     <>
@@ -63,24 +84,27 @@ export function StoryReader({ game }: { game: StoryGame }) {
                       aria-current={index === scene ? 'step' : undefined}
                       aria-label={`Paragraph ${index + 1}`}
                     >
-                      <p className="passage" aria-hidden="true">
-                        {part.characters.map(({ char, start }) => {
+                      <p
+                        className="passage"
+                        lang={selected.language}
+                        aria-hidden="true"
+                      >
+                        {part.characters.map(({ char, start }, index) => {
                           const position = part.start + start;
+                          const typed =
+                            typedCharacters[part.characterStart + index];
                           return (
                             <span
                               key={start}
-                              className={`${position < value.length ? (value.slice(position, position + char.length) === char ? 'correct' : 'incorrect') : 'pending'} ${position === value.length ? 'cursor' : ''}`}
+                              className={`${typed ? matchCharacter(typed.char, char, assistance) : 'pending'} ${position === cursorPosition ? 'cursor' : ''}`}
                             >
                               {char}
                             </span>
                           );
                         })}
                         {index === paragraphs.length - 1 &&
-                          value.length >= storyText.length && (
+                          cursorPosition >= storyText.length && (
                             <>
-                              <span className="incorrect">
-                                {value.slice(storyText.length)}
-                              </span>
                               <span className="cursor"> </span>
                             </>
                           )}
@@ -89,6 +113,7 @@ export function StoryReader({ game }: { game: StoryGame }) {
                   ))}
                 </div>
                 <textarea
+                  lang={selected.language}
                   readOnly={!started || paused}
                   tabIndex={started && !paused ? 0 : -1}
                   className="reader-input"
@@ -103,7 +128,11 @@ export function StoryReader({ game }: { game: StoryGame }) {
                   autoCapitalize="off"
                   autoCorrect="off"
                 />
-                <p id="passage-description" className="sr-only">
+                <p
+                  id="passage-description"
+                  className="sr-only"
+                  lang={selected.language}
+                >
                   {storyText}
                 </p>
                 {!started && (
@@ -111,7 +140,33 @@ export function StoryReader({ game }: { game: StoryGame }) {
                     <span className="small-icon">⌨</span>
                     <h3>Every word brings you closer.</h3>
                     <p>
-                      Type to follow the story. Paragraphs flow automatically.
+                      {errorMode === 'correct'
+                        ? 'Correct mistakes to continue.'
+                        : errorMode === 'forward'
+                          ? 'Keep typing. Corrections are disabled.'
+                          : 'Keep typing. Correct mistakes whenever you like.'}{' '}
+                      Paragraphs flow automatically.
+                    </p>
+                    {specialCharacters.length > 0 && (
+                      <p className="special-characters">
+                        This story uses{' '}
+                        <strong>{specialCharacters.join(' ')}</strong>.{' '}
+                        {assistance
+                          ? 'Matching base letters are accepted in yellow.'
+                          : 'Exact accents are required; accent buttons appear when needed.'}
+                      </p>
+                    )}
+                    <KeyboardCompatibility
+                      text={storyText}
+                      preferences={{
+                        keyboard: preferences.keyboard,
+                        assistance,
+                      }}
+                      detailed
+                    />
+                    <p className="match-legend">
+                      <span>Green: exact</span>
+                      <span>Yellow: assisted</span>
                     </p>
                     <button
                       className="primary"
@@ -129,16 +184,17 @@ export function StoryReader({ game }: { game: StoryGame }) {
                   </div>
                 )}
               </div>
-              {started && (paused || mistake >= 0) && (
-                <div
-                  className={`reader-status ${mistake >= 0 ? 'has-error' : ''}`}
-                  role="status"
-                >
-                  {paused
-                    ? 'Paused — scroll to look around, then resume.'
-                    : `Use backspace to correct the highlighted character. Expected ${expectedCharacter === ' ' ? 'a space' : '“' + expectedCharacter + '”'}.`}
-                </div>
-              )}
+              {started &&
+                (paused || (errorMode === 'correct' && mistake >= 0)) && (
+                  <div
+                    className={`reader-status ${mistake >= 0 ? 'has-error' : ''}`}
+                    role="status"
+                  >
+                    {paused
+                      ? 'Paused — scroll to look around, then resume.'
+                      : `Use backspace to correct the highlighted character. Expected ${expectedCharacter === ' ' ? 'a space' : '“' + expectedCharacter + '”'}.`}
+                  </div>
+                )}
             </>
           )}
           <div

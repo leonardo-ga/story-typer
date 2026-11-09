@@ -19,6 +19,7 @@ export function createAmbience(theme: Theme) {
     orbit: 120,
     bakery: 200,
     workshop: 100,
+    city: 350,
   }[theme];
   const gain = context.createGain();
   gain.gain.value = theme === 'workshop' ? 0.009 : 0.035;

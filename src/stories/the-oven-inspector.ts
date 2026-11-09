@@ -2,9 +2,11 @@ import type { Story } from './types';
 
 export const theOvenInspector = {
   id: 'the-oven-inspector',
+  storyId: 'the-oven-inspector',
+  language: 'en',
   title: 'The Oven Inspector',
   genre: 'Comic fantasy',
-  duration: '~9 min',
+  estimatedMinutes: 9,
   description:
     'Your bakery inspection is at eight. There is a dragon in the oven, and it has strong opinions about your bread.',
   caption: 'Proof, heat, and a little negotiation.',

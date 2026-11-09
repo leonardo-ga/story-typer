@@ -6,7 +6,7 @@
   --text: #dce2d9;
   --muted: #8f9e91;
   --accent: #d4b77e;
-  --typed: #ecd39d;
+  --typed: #c1dbbe;
   --border: #3c4841;
   font-family: 'DM Sans', sans-serif;
   font-synthesis: none;
@@ -197,15 +197,15 @@ footer span:nth-child(2) {
 }
 .theme-orbit {
   --accent: #b4cba1;
-  --typed: #d3e8b7;
 }
 .theme-bakery {
   --accent: #dcb780;
-  --typed: #f0d6a9;
 }
 .theme-workshop {
   --accent: #bac6ab;
-  --typed: #d7e1ca;
+}
+.theme-city {
+  --accent: #dfc47f;
 }
 
 @media (max-width: 900px) {

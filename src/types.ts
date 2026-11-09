@@ -1,3 +1,4 @@
+import type { ErrorMode } from './preferences';
 export interface Session {
   value: string;
   started: boolean;
@@ -5,4 +6,7 @@ export interface Session {
   attempts: number;
   correct: number;
   elapsed: number;
+  assisted?: number;
+  assistance?: boolean;
+  errorMode?: ErrorMode;
 }

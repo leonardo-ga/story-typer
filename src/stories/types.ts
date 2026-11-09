@@ -1,10 +1,13 @@
-export type Theme = 'coast' | 'orbit' | 'bakery' | 'workshop';
+export type Theme = 'coast' | 'orbit' | 'bakery' | 'workshop' | 'city';
+export type Language = 'en' | 'it' | 'fr' | 'ko';
 
 export interface Story {
   id: string;
+  storyId: string;
+  language: Language;
   title: string;
   genre: string;
-  duration: string;
+  estimatedMinutes: number;
   description: string;
   caption: string;
   setting: string;

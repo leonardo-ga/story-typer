@@ -5,7 +5,8 @@ import {
   activeParagraphIndex,
   analyzeTyping,
   buildStoryText,
-  constrainTyping,
+  applyErrorMode,
+  typingCursor,
   countEdit,
   moveCaretToEnd,
   normalizeParagraphBreaks,
@@ -14,6 +15,7 @@ import {
 import type { Session } from '../types';
 import { useStoryAudio } from './useStoryAudio';
 import { useReaderViewport } from './useReaderViewport';
+import type { ErrorMode } from '../preferences';
 
 const emptySession: Session = {
   value: '',
@@ -24,7 +26,10 @@ const emptySession: Session = {
   elapsed: 0,
 };
 
-export function useStoryGame() {
+export function useStoryGame(
+  defaultAssistance = false,
+  defaultErrorMode: ErrorMode = 'free',
+) {
   const initialStory = findStory(window.location.hash);
   const [selectedId, setSelectedId] = useState(
     initialStory?.id ?? stories[0].id,
@@ -45,23 +50,48 @@ export function useStoryGame() {
   const [rain, setRain] = useState(false);
   const [attempts, setAttempts] = useState(0);
   const [correct, setCorrect] = useState(0);
+  const [assisted, setAssisted] = useState(0);
+  const [assistance, setAssistance] = useState(defaultAssistance);
+  const [errorMode, setErrorMode] = useState<ErrorMode>(defaultErrorMode);
   const [elapsed, setElapsed] = useState(0);
 
   const input = useRef<HTMLTextAreaElement>(null);
 
   const clock = useRef<number | null>(null);
-  const scene = activeParagraphIndex(paragraphs, value.length);
-  const complete = value === storyText;
-  const analysis = useMemo(
-    () => analyzeTyping(value, storyText),
+  const cursor = useMemo(
+    () => typingCursor(value, storyText),
     [value, storyText],
   );
+  const typedCharacters = useMemo(() => segmentText(value), [value]);
+  const scene = activeParagraphIndex(paragraphs, cursor.offset);
+  const analysis = useMemo(
+    () => analyzeTyping(value, storyText, assistance),
+    [value, storyText, assistance],
+  );
+  const complete =
+    cursor.count === cursor.total &&
+    (errorMode !== 'correct' || analysis.mistake === -1);
   const { mistake, correct: matching } = analysis;
   const expectedCharacter =
     mistake < 0 ? '' : (segmentText(storyText.slice(mistake))[0]?.char ?? '');
+  const nextCharacter =
+    segmentText(storyText.slice(cursor.offset))[0]?.char ?? '';
+  useEffect(() => {
+    if (!started) {
+      setAssistance(defaultAssistance);
+      setErrorMode(defaultErrorMode);
+    }
+  }, [defaultAssistance, defaultErrorMode, started]);
   const progress = complete
     ? 100
-    : Math.min(99, Math.round((matching / analysis.total) * 100));
+    : Math.min(
+        99,
+        Math.round(
+          ((errorMode === 'correct' ? matching : cursor.count) /
+            analysis.total) *
+            100,
+        ),
+      );
   useEffect(() => {
     const pauseWhenHidden = (event: Event) => {
       if (
@@ -91,6 +121,9 @@ export function useStoryGame() {
         attempts,
         correct,
         elapsed,
+        assisted,
+        assistance,
+        errorMode,
       };
       const destination = findStory(window.location.hash);
       setInStory(!!destination);
@@ -104,13 +137,33 @@ export function useStoryGame() {
         setAttempts(saved.attempts);
         setCorrect(saved.correct);
         setElapsed(saved.elapsed);
+        setAssisted(saved.assisted ?? 0);
+        setAssistance(
+          saved.started ? (saved.assistance ?? false) : defaultAssistance,
+        );
+        setErrorMode(
+          saved.started ? (saved.errorMode ?? 'correct') : defaultErrorMode,
+        );
         scrollTarget.current = null;
       }
       window.scrollTo(0, 0);
     };
     window.addEventListener('hashchange', navigate);
     return () => window.removeEventListener('hashchange', navigate);
-  }, [selectedId, value, started, finished, attempts, correct, elapsed]);
+  }, [
+    selectedId,
+    value,
+    started,
+    finished,
+    attempts,
+    correct,
+    elapsed,
+    assisted,
+    assistance,
+    defaultAssistance,
+    defaultErrorMode,
+    errorMode,
+  ]);
   useEffect(() => {
     document.title = inStory
       ? `${selected.title} — Story Typer`
@@ -173,20 +226,44 @@ export function useStoryGame() {
     theme: selected.theme,
     focusTyping,
   });
-  function change(next: string) {
+  function change(next: string, composition = false) {
     if (paused || finished || complete || document.hidden) return;
     const normalized = normalizeParagraphBreaks(next, paragraphs);
-    const accepted = constrainTyping(value, normalized, storyText);
+    const accepted = applyErrorMode(
+      value,
+      normalized,
+      storyText,
+      assistance,
+      errorMode,
+      composition,
+    );
     if (accepted !== value) audio.playTyping(accepted.length < value.length);
-    const edit = countEdit(value, normalized, storyText);
+    const edit = countEdit(
+      value,
+      errorMode === 'forward' ? accepted : normalized,
+      storyText,
+    );
     setAttempts((a) => a + edit.attempts);
-    setCorrect((c) => c + countEdit(value, accepted, storyText).correct);
+    const exact = countEdit(value, accepted, storyText).correct;
+    const acceptedCount = countEdit(
+      value,
+      accepted,
+      storyText,
+      assistance,
+    ).correct;
+    setCorrect((c) => c + exact);
+    setAssisted((count) => count + acceptedCount - exact);
     setValue(accepted);
     if (input.current && next !== accepted) {
       input.current.value = accepted;
       moveCaretToEnd(input.current);
     }
-    if (accepted === storyText) setFinished(true);
+    if (
+      typingCursor(accepted, storyText).count === cursor.total &&
+      (errorMode !== 'correct' ||
+        analyzeTyping(accepted, storyText, assistance).mistake === -1)
+    )
+      setFinished(true);
   }
   function togglePause() {
     setPaused((current) => !current);
@@ -203,6 +280,9 @@ export function useStoryGame() {
     setValue('');
     setAttempts(0);
     setCorrect(0);
+    setAssisted(0);
+    setAssistance(defaultAssistance);
+    setErrorMode(defaultErrorMode);
     setElapsed(0);
     setFinished(false);
     setPaused(false);
@@ -225,6 +305,9 @@ export function useStoryGame() {
     setPaused,
     finished,
     value,
+    typedCharacters,
+    cursorPosition: cursor.offset,
+    errorMode,
     storyText,
     paragraphs,
     reader,
@@ -233,6 +316,9 @@ export function useStoryGame() {
     change,
     mistake,
     expectedCharacter,
+    nextCharacter,
+    assistance,
+    assisted,
     progress,
     togglePause,
     restart,

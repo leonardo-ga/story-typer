@@ -2,9 +2,11 @@ import type { Story } from './types';
 
 export const lastFrequency = {
   id: 'last-frequency',
+  storyId: 'last-frequency',
+  language: 'en',
   title: 'The Last Frequency',
   genre: 'Mystery',
-  duration: '~5 min',
+  estimatedMinutes: 5,
   description:
     'A quiet coast. An impossible signal. On your first night at a remote radio station, a voice calls from somewhere that no longer exists.',
   caption: 'Some signals never fade.',

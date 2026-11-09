@@ -1,8 +1,19 @@
 import { accuracy } from '../metrics.mjs';
 import type { StoryGame } from '../hooks/useStoryGame';
+import { errorModeNames } from '../preferences';
 
 export function StoryResults({ game }: { game: StoryGame }) {
-  const { selected, wpm, correct, attempts, elapsed, restart } = game;
+  const {
+    selected,
+    wpm,
+    correct,
+    assisted,
+    assistance,
+    errorMode,
+    attempts,
+    elapsed,
+    restart,
+  } = game;
   return (
     <div className="results">
       <span className="eyebrow">STORY COMPLETE</span>
@@ -14,7 +25,7 @@ export function StoryResults({ game }: { game: StoryGame }) {
           <span>WORDS / MIN</span>
         </div>
         <div>
-          <strong>{accuracy(correct, attempts)}%</strong>
+          <strong>{accuracy(correct + assisted, attempts)}%</strong>
           <span>ACCURACY</span>
         </div>
         <div>
@@ -25,6 +36,13 @@ export function StoryResults({ game }: { game: StoryGame }) {
           <span>ACTIVE TIME</span>
         </div>
       </div>
+      {assistance && (
+        <p className="results-assistance">
+          Assisted mode · {assisted} assisted entries ·{' '}
+          {accuracy(correct, attempts)}% exact accuracy
+        </p>
+      )}
+      <p className="results-mode">{errorModeNames[errorMode]}</p>
       <button className="primary" onClick={restart}>
         Read it again ↺
       </button>

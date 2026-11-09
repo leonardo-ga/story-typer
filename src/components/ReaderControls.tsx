@@ -2,8 +2,21 @@ import { accuracy } from '../metrics.mjs';
 import type { StoryGame } from '../hooks/useStoryGame';
 
 export function ReaderControls({ game }: { game: StoryGame }) {
-  const { wpm, correct, attempts, progress, started, togglePause, paused } =
-    game;
+  const {
+    wpm,
+    correct,
+    assisted,
+    nextCharacter,
+    mistake,
+    change,
+    value,
+    focusTyping,
+    attempts,
+    progress,
+    started,
+    togglePause,
+    paused,
+  } = game;
   return (
     <div className="stats-bar">
       <div className="stat">
@@ -11,10 +24,29 @@ export function ReaderControls({ game }: { game: StoryGame }) {
         <span>WORDS / MIN</span>
       </div>
       <div className="stat">
-        <strong>{accuracy(correct, attempts)}%</strong>
+        <strong>{accuracy(correct + assisted, attempts)}%</strong>
         <span>ACCURACY</span>
       </div>
       <span className="compact-progress">{progress}% read</span>
+      {assisted > 0 && (
+        <span className="assisted-count">{assisted} assisted</span>
+      )}
+      {started &&
+        !paused &&
+        (game.errorMode !== 'correct' || mistake < 0) &&
+        /\p{M}/u.test(nextCharacter.normalize('NFD')) && (
+          <button
+            className="insert-character"
+            onPointerDown={(event) => event.preventDefault()}
+            onClick={() => {
+              change(value + nextCharacter);
+              focusTyping();
+            }}
+            aria-label={`Insert ${nextCharacter}`}
+          >
+            {nextCharacter}
+          </button>
+        )}
       {started && (
         <button
           className="pause-control"
