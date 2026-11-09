@@ -1,0 +1,22 @@
+.keyboard-compatibility {
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.story-card-body > .keyboard-compatibility {
+  font-size: 0.76rem;
+  line-height: 1.5;
+  margin: 0 0 14px;
+}
+.keyboard-compatibility small {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: inherit;
+}
+.keyboard-compatibility--compatible > span {
+  color: var(--typed);
+}
+.keyboard-compatibility--assisted > span,
+.keyboard-compatibility--needs-input > span {
+  color: #b98b36;
+}

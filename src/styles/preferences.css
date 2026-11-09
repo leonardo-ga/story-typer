@@ -97,33 +97,10 @@
   padding: 0;
   min-width: 0;
 }
-.preference-section {
-  min-width: 0;
-}
 .preference-section--typing {
   grid-column: 1 / -1;
   border-top: 1px solid #ffffff0b;
   padding-top: 16px;
-}
-.typing-section-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding-bottom: 12px;
-  margin-bottom: 12px;
-  border-bottom: 1px solid #ffffff0b;
-}
-.typing-section-heading h3 {
-  font:
-    500 13px 'DM Sans',
-    sans-serif;
-  color: #e0e6da;
-  margin: 0;
-}
-.typing-section-heading > span {
-  color: #8f9e87;
-  font-size: 10px;
 }
 .typing-behavior-grid {
   display: grid;
@@ -153,32 +130,6 @@
 }
 .assistance-group .switch-control {
   grid-area: 2 / 2;
-}
-.assistance-group .assistance-option {
-  flex: 1;
-}
-.error-mode-group .preference-help {
-  min-height: 30px;
-}
-.assistance-group .assistance-option {
-  gap: 10px;
-  min-height: 20px;
-}
-.assistance-group .assistance-option strong {
-  font-size: 12px;
-}
-.assistance-group .preference-preview {
-  gap: 10px;
-  border: 0;
-  padding-top: 0;
-  margin: 0;
-}
-.preference-preview > b {
-  font:
-    15px Georgia,
-    serif;
-  padding: 3px 6px;
-  border-radius: 5px;
 }
 .info-tip {
   position: relative;
@@ -256,12 +207,6 @@
     500 13px 'DM Sans',
     sans-serif;
   color: #e0e6da;
-  margin: 0;
-}
-.preference-section-heading p {
-  font-size: 11px;
-  line-height: 1.5;
-  color: #91a18b;
   margin: 0;
 }
 .preferred-language {
@@ -381,13 +326,6 @@
   border-radius: 8px;
   color: #d4bf8c;
 }
-.assistance-option {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  cursor: pointer;
-}
 .error-mode-options {
   border: 0;
   padding: 0;
@@ -411,13 +349,6 @@
   color: #dfe5d8;
   font-size: 12px;
 }
-.assistance-description > b {
-  font:
-    14px Georgia,
-    serif;
-  padding: 3px 6px;
-  border-radius: 5px;
-}
 .assistance-label {
   display: flex;
   flex-direction: column;
@@ -430,23 +361,6 @@
 .assistance-label small b {
   font-weight: 400;
   color: #ebcb72;
-}
-.error-mode-option ~ .assistance-option {
-  border-top: 1px solid #ffffff0b;
-  padding-top: 12px;
-  margin-top: 12px;
-}
-.assistance-option strong {
-  font-size: 13px;
-  font-weight: 500;
-  color: #e0e6da;
-}
-.assistance-option small {
-  display: block;
-  font-size: 11px;
-  line-height: 1.6;
-  color: #91a18b;
-  margin-top: 5px;
 }
 .switch-control {
   position: relative;
@@ -498,36 +412,6 @@
   outline: 2px solid var(--accent);
   outline-offset: 4px;
 }
-.preference-preview {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-  margin-top: 10px;
-  padding-top: 9px;
-  border-top: 1px solid #ffffff0b;
-}
-.preference-preview > span {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 10px;
-  color: #a5b09a;
-}
-.preference-preview b {
-  font:
-    15px Georgia,
-    serif;
-  padding: 3px 7px;
-  border-radius: 5px;
-}
-.exact-example {
-  color: var(--typed);
-  background: #c1dbbe09;
-}
-.assisted-example {
-  color: #ebcb72;
-  background: #ebcb7209;
-}
 @media (max-width: 650px) {
   .header-actions {
     gap: 8px;
@@ -547,9 +431,6 @@
   }
   .typing-preferences {
     padding: 10px 12px;
-  }
-  .preference-section {
-    padding: 0;
   }
   .preference-section--typing {
     padding-top: 14px;
@@ -579,35 +460,4 @@
     border-top: 1px solid #ffffff0b;
     padding-top: 12px;
   }
-  .assistance-group {
-    flex-wrap: wrap;
-  }
-  .error-mode-group .preference-help {
-    min-height: 0;
-  }
-  .assistance-group .preference-preview {
-    flex-wrap: nowrap;
-  }
-}
-.keyboard-compatibility {
-  font-size: 0.76rem;
-  line-height: 1.5;
-  color: var(--muted);
-}
-.story-card-body > .keyboard-compatibility {
-  font-size: 0.76rem;
-  line-height: 1.5;
-  margin: 0 0 14px;
-}
-.keyboard-compatibility small {
-  display: block;
-  margin-top: 0.3rem;
-  font-size: inherit;
-}
-.keyboard-compatibility--compatible > span {
-  color: var(--typed);
-}
-.keyboard-compatibility--assisted > span,
-.keyboard-compatibility--needs-input > span {
-  color: #b98b36;
 }

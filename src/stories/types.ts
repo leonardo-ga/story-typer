@@ -1,5 +1,7 @@
-export type Theme = 'coast' | 'orbit' | 'bakery' | 'workshop' | 'city';
-export type Language = 'en' | 'it' | 'fr' | 'ko';
+import type { Theme } from './themes';
+export type { Theme } from './themes';
+import type { Language } from '../languages';
+export type { Language } from '../languages';
 
 export interface Story {
   id: string;
@@ -11,7 +13,6 @@ export interface Story {
   description: string;
   caption: string;
   setting: string;
-  effect: string | null;
   theme: Theme;
   ending: string;
   epilogue: string;

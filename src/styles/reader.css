@@ -186,12 +186,6 @@ body.reading {
   font-size: 11px;
   margin-bottom: 12px;
 }
-.overlay .keyboard-advice {
-  max-width: 450px;
-  font-size: 10px;
-  color: #9eae97;
-  margin-bottom: 12px;
-}
 .special-characters strong {
   color: #d8dfc5;
   letter-spacing: 2px;

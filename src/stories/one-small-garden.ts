@@ -11,7 +11,6 @@ export const oneSmallGarden = {
     'Far from Earth, a maintenance robot discovers something unexpected in a deserted greenhouse. A gentle story about finding a reason to grow.',
   caption: 'A little green in the great unknown.',
   setting: 'AN ORBITAL GREENHOUSE',
-  effect: 'Stardust',
   theme: 'orbit',
   ending: 'Something new is growing.',
   epilogue: 'A small garden. A very large universe. A place to call home.',

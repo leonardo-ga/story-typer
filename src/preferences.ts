@@ -1,4 +1,5 @@
 import type { Language } from './stories/types';
+import { isLanguage } from './languages';
 
 export const keyboardNames = {
   unknown: 'Not set',
@@ -34,9 +35,7 @@ export function readPreferences(): Preferences {
   try {
     const value = JSON.parse(localStorage.getItem(preferenceKey) ?? '{}');
     return {
-      language: ['en', 'it', 'fr', 'ko', 'none'].includes(value?.language)
-        ? value.language
-        : 'none',
+      language: isLanguage(value?.language) ? value.language : 'none',
       assistance:
         typeof value?.assistance === 'boolean' ? value.assistance : true,
       keyboard: Object.hasOwn(keyboardNames, value?.keyboard)

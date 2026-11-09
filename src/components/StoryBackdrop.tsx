@@ -1,16 +1,18 @@
 import type { CSSProperties } from 'react';
 import type { StoryGame } from '../hooks/useStoryGame';
+import { getTheme } from '../stories/themes';
 
 export function StoryBackdrop({ game }: { game: StoryGame }) {
   const { inStory, rain, finished, selected, scene, paused } = game;
+  const { animation } = getTheme(selected.theme);
   return (
     inStory &&
-    selected.effect &&
+    animation &&
     rain &&
     !finished &&
-    (selected.theme === 'orbit' || scene < selected.paragraphs.length - 1) && (
+    (!animation.clearAtEnding || scene < selected.paragraphs.length - 1) && (
       <div
-        className={`rain-background ${selected.theme === 'orbit' ? 'star-background' : ''} ${paused ? 'rain-paused' : ''}`}
+        className={`rain-background ${animation.kind === 'stars' ? 'star-background' : ''} ${paused ? 'rain-paused' : ''}`}
         aria-hidden="true"
       >
         {Array.from({ length: 28 }, (_, index) => (

@@ -93,6 +93,7 @@ test('Speed mode allows Korean syllable extension but still blocks corrections',
   stories.push({
     ...stories[0],
     id: 'korean-speed-test',
+    storyId: 'korean-speed-test',
     language: 'ko',
     paragraphs: [{ title: 'Test', time: '00:00', text: '각자 간다' }],
   });
@@ -170,6 +171,7 @@ test('the reader accepts a composed accent and emoji without false errors or los
   stories.push({
     ...stories[0],
     id: 'unicode-test',
+    storyId: 'unicode-test',
     title: 'Unicode test',
     paragraphs: [{ title: 'Test', time: '00:00', text: 'café 😀' }],
   });
@@ -363,6 +365,7 @@ test('similar letters render yellow and can complete an assisted attempt', async
   stories.push({
     ...stories[0],
     id: 'assisted-test',
+    storyId: 'assisted-test',
     paragraphs: [{ title: 'Test', time: '00:00', text: 'dà qui' }],
   });
   try {
@@ -416,6 +419,7 @@ test('strict mode rejects base letters but offers the exact accent button', asyn
   stories.push({
     ...stories[0],
     id: 'strict-test',
+    storyId: 'strict-test',
     paragraphs: [{ title: 'Test', time: '00:00', text: 'dà' }],
   });
   try {
@@ -659,6 +663,7 @@ test('Free flow allows backspace and completes with uncorrected errors', async (
   stories.push({
     ...stories[0],
     id: 'free-test',
+    storyId: 'free-test',
     paragraphs: [{ title: 'Test', time: '00:00', text: 'ab cd' }],
   });
   try {
@@ -702,6 +707,7 @@ test('Keep moving rejects corrections, records errors, and keeps its mode after 
   stories.push({
     ...stories[0],
     id: 'forward-test',
+    storyId: 'forward-test',
     paragraphs: [{ title: 'Test', time: '00:00', text: 'ab cd' }],
   });
   try {
@@ -772,6 +778,7 @@ test('uncorrected emoji errors do not shift paragraph transitions or Enter handl
   stories.push({
     ...stories[0],
     id: 'alignment-test',
+    storyId: 'alignment-test',
     paragraphs: [
       { title: 'First', time: '00:00', text: 'ab' },
       { title: 'Second', time: '00:01', text: 'cd' },

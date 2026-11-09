@@ -1,3 +1,4 @@
+import { getStoryText } from '../stories/text';
 import { moveCaretToEnd } from '../typing.mjs';
 import { KeyboardCompatibility } from './KeyboardCompatibility';
 import type { StoryGame } from '../hooks/useStoryGame';
@@ -37,13 +38,7 @@ export function StoryReader({
     setStarted,
     setPaused,
   } = game;
-  const specialCharacters = [
-    ...new Set(
-      paragraphs
-        .flatMap((part) => part.characters.map((character) => character.char))
-        .filter((char) => /\p{M}/u.test(char.normalize('NFD'))),
-    ),
-  ];
+  const { specialCharacters } = getStoryText(selected);
   const compositionInput = useCompositionInput(
     value,
     change,

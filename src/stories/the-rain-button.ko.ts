@@ -11,7 +11,6 @@ export const theRainButton = {
     '막차를 놓친 지우는 버스 정류장에서 이상한 버튼을 발견한다. 비를 멈추는 일은 쉬웠다. 다시 내리게 하는 일은 조금 달랐다.',
   caption: '누르기 전에 뒷면을 읽으세요.',
   setting: '비 오는 밤의 버스 정류장',
-  effect: 'Rain',
   theme: 'city',
   ending: '비는 다시 제 갈 길을 간다.',
   epilogue:

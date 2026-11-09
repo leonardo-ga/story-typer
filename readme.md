@@ -61,9 +61,11 @@ Builds are run by the project owner; do not run a build automatically when makin
 ## Project structure
 
 - `src/App.tsx` composes the shared header, story library, reader, and background effects. `main.tsx` only starts React.
-- `src/stories/` contains typed content files and a central registry in `index.ts`. Each edition has a unique `id`, a shared `storyId`, a `language`, and numeric `estimatedMinutes`. Add an edition implementing `Story`, then register it there; cards, filters, language options, and tests update automatically. Add new language names to `src/library.ts` and the `Language` type when introducing another language. Estimates describe typing time and vary with the player's speed.
-- `src/components/` contains the header, library, cover art, reader, controls, results, and backdrop.
-- `src/hooks/` separates gameplay and sessions, audio lifecycle, and viewport/automatic scrolling.
+- `src/stories/` contains typed content files and a central registry in `index.ts`. `catalog.ts` indexes routes and language editions, derives filter options, and rejects duplicate registrations. `text.ts` caches normalized text and grapheme segmentation for the reader and cards. See [the story authoring guide](CONTRIBUTING.md) for adding stories and translations.
+- `src/languages.ts` is the single source of language names and the `Language` type. Adding an entry updates preference validation and language selectors.
+- `src/stories/themes.ts` defines animation behavior and ambience settings. Themes are reusable across stories; the `Theme` type is derived from this registry.
+- `src/components/` separates library layout, individual story cards, keyboard preferences, reader, controls, and results. `covers/` contains independent artwork components with an exhaustive theme-to-cover registry; `StoryCover` supplies the shared frame and caption.
+- `src/hooks/` separates gameplay and sessions, active-time tracking, audio lifecycle, and viewport/automatic scrolling.
 - `src/audio/` contains the local audio synthesizers.
 - `src/styles/` separates shared design tokens and header rules from library, reader, cover art, and effects styles. Both pages use the same header height and responsive breakpoints.
 - `src/typing.mjs` and `src/metrics.mjs` hold the input and scoring logic independently of React.

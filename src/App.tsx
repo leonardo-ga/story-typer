@@ -3,17 +3,21 @@ import { Header } from './components/Header';
 import { StoryLibrary } from './components/StoryLibrary';
 import { StoryReader } from './components/StoryReader';
 import { StoryBackdrop } from './components/StoryBackdrop';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
+import { stories } from './stories';
+import { createStoryCatalog } from './stories/catalog';
 import { defaultFilters } from './library';
 import { usePreferences } from './hooks/usePreferences';
 import { PreferencesDialog } from './components/PreferencesDialog';
 
 export function App() {
   const preferences = usePreferences();
-  const game = useStoryGame(
-    preferences.preferences.assistance,
-    preferences.preferences.errorMode,
-  );
+  const catalog = useMemo(() => createStoryCatalog(stories), []);
+  const game = useStoryGame({
+    catalog,
+    defaultAssistance: preferences.preferences.assistance,
+    defaultErrorMode: preferences.preferences.errorMode,
+  });
   const [filters, setFilters] = useState({ ...defaultFilters });
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const preferencesButton = useRef<HTMLButtonElement>(null);
@@ -40,6 +44,7 @@ export function App() {
           <StoryReader game={game} preferences={preferences.preferences} />
         ) : (
           <StoryLibrary
+            catalog={catalog}
             sessions={game.sessions.current}
             filters={filters}
             onFiltersChange={setFilters}

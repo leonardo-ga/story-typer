@@ -150,12 +150,13 @@ export function buildStoryText(paragraphs) {
     const text =
       paragraph.text.normalize('NFC') +
       (index < paragraphs.length - 1 ? ' ' : '');
+    const characters = segmentText(text);
     const part = {
       ...paragraph,
       text,
-      characters: segmentText(text),
+      characters,
       characterStart: characterOffset,
-      characterEnd: characterOffset + segmentText(text).length,
+      characterEnd: characterOffset + characters.length,
       start: offset,
       end: offset + text.length,
     };

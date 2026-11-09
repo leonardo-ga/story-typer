@@ -1,24 +1,21 @@
+import { languageNames } from '../languages';
 import { useId, useState } from 'react';
-import { stories } from '../stories';
-import {
-  defaultFilters,
-  languageNames,
-  type LibraryFilters as Filters,
-} from '../library';
+import type { StoryCatalog } from '../stories/catalog';
+import { defaultFilters, type LibraryFilters as Filters } from '../library';
 
 interface Props {
+  catalog: StoryCatalog;
   filters: Filters;
   onChange: (filters: Filters) => void;
 }
 
-export function LibraryFilters({ filters, onChange }: Props) {
+export function LibraryFilters({ catalog, filters, onChange }: Props) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
   function change(key: keyof Filters, value: string) {
     onChange({ ...filters, [key]: value });
   }
-  const genres = [...new Set(stories.map((story) => story.genre))].sort();
-  const languages = [...new Set(stories.map((story) => story.language))];
+  const { genres, languages } = catalog;
   const advancedCount = (
     ['genre', 'language', 'time', 'progress', 'sort'] as const
   ).filter((key) => filters[key] !== defaultFilters[key]).length;

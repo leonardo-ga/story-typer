@@ -11,7 +11,6 @@ export const lastFrequency = {
     'A quiet coast. An impossible signal. On your first night at a remote radio station, a voice calls from somewhere that no longer exists.',
   caption: 'Some signals never fade.',
   setting: 'A COASTAL RADIO STATION',
-  effect: 'Rain',
   theme: 'coast',
   ending: 'You brought them home.',
   epilogue: 'The night is over. Thank you for listening.',

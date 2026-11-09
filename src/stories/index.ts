@@ -16,5 +16,3 @@ export const stories: Story[] = [
   theLastRepair,
   theRainButton,
 ];
-export const findStory = (hash: string) =>
-  stories.find((story) => '#' + story.id === hash);

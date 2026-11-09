@@ -2,6 +2,7 @@ import type { StoryGame } from '../hooks/useStoryGame';
 import { EffectToggle } from './EffectToggle';
 import { SettingsIcon } from './SettingsIcon';
 import type { RefObject } from 'react';
+import { getTheme } from '../stories/themes';
 
 export function Header({
   game,
@@ -25,6 +26,7 @@ export function Header({
     setSound,
     focusTyping,
   } = game;
+  const { animation } = getTheme(selected.theme);
   return (
     <header className="site-header">
       <a className="brand" href="#" aria-label="Story Typer home">
@@ -46,10 +48,10 @@ export function Header({
               active={typingSound}
               onToggle={toggleTypingSound}
             />
-            {selected.effect && (
+            {animation && (
               <EffectToggle
-                label={`${selected.effect} animation`}
-                icon={selected.theme === 'orbit' ? 'stars' : 'rain'}
+                label={`${animation.label} animation`}
+                icon={animation.kind}
                 active={rain}
                 onToggle={() => {
                   setRain(!rain);

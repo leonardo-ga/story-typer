@@ -1,12 +1,6 @@
 import type { Story, Language } from './stories/types';
 import type { Session } from './types';
 
-export const languageNames: Record<Language, string> = {
-  en: 'English',
-  ko: '한국어',
-  it: 'Italiano',
-  fr: 'Français',
-};
 export interface LibraryFilters {
   query: string;
   genre: string;
@@ -27,7 +21,7 @@ const searchable = (text: string) =>
   text.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase();
 
 export function filterStories(
-  stories: Story[],
+  stories: readonly Story[],
   filters: LibraryFilters,
   sessions: Record<string, Session>,
   preferredLanguage: Language | 'none' = 'none',

@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { stories, findStory } from '../stories';
+import type { StoryCatalog } from '../stories/catalog';
+import { getStoryText } from '../stories/text';
 import { wordsPerMinute } from '../metrics.mjs';
 import {
   activeParagraphIndex,
   analyzeTyping,
-  buildStoryText,
   applyErrorMode,
   typingCursor,
   countEdit,
@@ -16,6 +16,7 @@ import type { Session } from '../types';
 import { useStoryAudio } from './useStoryAudio';
 import { useReaderViewport } from './useReaderViewport';
 import type { ErrorMode } from '../preferences';
+import { useActiveTimer } from './useActiveTimer';
 
 const emptySession: Session = {
   value: '',
@@ -26,23 +27,24 @@ const emptySession: Session = {
   elapsed: 0,
 };
 
-export function useStoryGame(
+export function useStoryGame({
+  catalog,
   defaultAssistance = false,
-  defaultErrorMode: ErrorMode = 'free',
-) {
+  defaultErrorMode = 'free',
+}: {
+  catalog: StoryCatalog;
+  defaultAssistance?: boolean;
+  defaultErrorMode?: ErrorMode;
+}) {
+  const { findStory, stories } = catalog;
   const initialStory = findStory(window.location.hash);
   const [selectedId, setSelectedId] = useState(
     initialStory?.id ?? stories[0].id,
   );
   const [inStory, setInStory] = useState(!!initialStory);
   const sessions = useRef<Record<string, Session>>({});
-  const selected = stories.find((item) => item.id === selectedId)!;
-  const story = selected.paragraphs;
-  const paragraphs = useMemo(() => buildStoryText(story), [story]);
-  const storyText = useMemo(
-    () => paragraphs.map((part) => part.text).join(''),
-    [paragraphs],
-  );
+  const selected = findStory(selectedId)!;
+  const { paragraphs, text: storyText } = getStoryText(selected);
   const [value, setValue] = useState('');
   const [started, setStarted] = useState(false);
   const [finished, setFinished] = useState(false);
@@ -53,11 +55,9 @@ export function useStoryGame(
   const [assisted, setAssisted] = useState(0);
   const [assistance, setAssistance] = useState(defaultAssistance);
   const [errorMode, setErrorMode] = useState<ErrorMode>(defaultErrorMode);
-  const [elapsed, setElapsed] = useState(0);
 
   const input = useRef<HTMLTextAreaElement>(null);
 
-  const clock = useRef<number | null>(null);
   const cursor = useMemo(
     () => typingCursor(value, storyText),
     [value, storyText],
@@ -71,6 +71,9 @@ export function useStoryGame(
   const complete =
     cursor.count === cursor.total &&
     (errorMode !== 'correct' || analysis.mistake === -1);
+  const { elapsed, setElapsed } = useActiveTimer(
+    inStory && started && !paused && !finished && !complete,
+  );
   const { mistake, correct: matching } = analysis;
   const expectedCharacter =
     mistake < 0 ? '' : (segmentText(storyText.slice(mistake))[0]?.char ?? '');
@@ -151,6 +154,7 @@ export function useStoryGame(
     window.addEventListener('hashchange', navigate);
     return () => window.removeEventListener('hashchange', navigate);
   }, [
+    findStory,
     selectedId,
     value,
     started,
@@ -186,23 +190,6 @@ export function useStoryGame(
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [inStory, started, finished, paused]);
-  useEffect(() => {
-    if (!inStory || !started || paused || finished || complete) {
-      clock.current = null;
-      return;
-    }
-    clock.current = performance.now();
-    const id = window.setInterval(() => {
-      const now = performance.now();
-      const delta = now - (clock.current ?? now);
-      clock.current = now;
-      setElapsed((e) => e + delta);
-    }, 100);
-    return () => {
-      window.clearInterval(id);
-      clock.current = null;
-    };
-  }, [inStory, started, paused, finished, complete]);
   useEffect(() => {
     if (inStory && started && !paused && !finished)
       input.current?.focus({ preventScroll: true });

@@ -11,7 +11,6 @@ export const theLastRepair = {
     "On the last afternoon in your father's violin workshop, a boy brings in a broken instrument. The moving van can wait.",
   caption: 'One more thing before we go.',
   setting: 'A VIOLIN WORKSHOP ON BELL LANE',
-  effect: null,
   theme: 'workshop',
   ending: 'Ready for the next player.',
   epilogue: 'The shop is closed. The tools are packed. The work goes with you.',

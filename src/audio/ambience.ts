@@ -1,6 +1,8 @@
 import type { Theme } from '../stories/types';
+import { getTheme } from '../stories/themes';
 
 export function createAmbience(theme: Theme) {
+  const { frequency, gain: level, texture } = getTheme(theme).ambience;
   const context = new AudioContext();
   const buffer = context.createBuffer(
     1,
@@ -14,18 +16,12 @@ export function createAmbience(theme: Theme) {
   source.loop = true;
   const filter = context.createBiquadFilter();
   filter.type = 'lowpass';
-  filter.frequency.value = {
-    coast: 450,
-    orbit: 120,
-    bakery: 200,
-    workshop: 100,
-    city: 350,
-  }[theme];
+  filter.frequency.value = frequency;
   const gain = context.createGain();
-  gain.gain.value = theme === 'workshop' ? 0.009 : 0.035;
+  gain.gain.value = level;
   source.connect(filter).connect(gain).connect(context.destination);
   source.start();
-  if (theme === 'orbit') {
+  if (texture === 'hum') {
     const hum = context.createOscillator();
     hum.frequency.value = 55;
     const volume = context.createGain();
@@ -33,7 +29,7 @@ export function createAmbience(theme: Theme) {
     hum.connect(volume).connect(context.destination);
     hum.start();
   }
-  if (theme === 'bakery') {
+  if (texture === 'warmth') {
     const warmth = context.createOscillator();
     warmth.frequency.value = 0.18;
     const variation = context.createGain();
@@ -41,7 +37,7 @@ export function createAmbience(theme: Theme) {
     warmth.connect(variation).connect(gain.gain);
     warmth.start();
   }
-  if (theme === 'workshop') {
+  if (texture === 'clock') {
     const ticks = context.createBuffer(
       1,
       context.sampleRate * 2,

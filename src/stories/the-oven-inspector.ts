@@ -11,7 +11,6 @@ export const theOvenInspector = {
     'Your bakery inspection is at eight. There is a dragon in the oven, and it has strong opinions about your bread.',
   caption: 'Proof, heat, and a little negotiation.',
   setting: 'A BAKERY ON BRAMBLE STREET',
-  effect: null,
   theme: 'bakery',
   ending: 'Approved, with conditions.',
   epilogue:
