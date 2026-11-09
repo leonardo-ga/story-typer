@@ -1,3 +1,5 @@
+import { SingleSelect } from './SingleSelect';
+import { useI18n } from '../i18n/I18nProvider';
 import { languageNames } from '../languages';
 import { useId, useState } from 'react';
 import type { StoryCatalog } from '../stories/catalog';
@@ -10,6 +12,7 @@ interface Props {
 }
 
 export function LibraryFilters({ catalog, filters, onChange }: Props) {
+  const { t, text } = useI18n();
   const [open, setOpen] = useState(false);
   const panelId = useId();
   function change(key: keyof Filters, value: string) {
@@ -23,15 +26,15 @@ export function LibraryFilters({ catalog, filters, onChange }: Props) {
   return (
     <form
       className="library-filters"
-      aria-label="Filter stories"
+      aria-label={t('Filter stories')}
       onSubmit={(event) => event.preventDefault()}
     >
       <div className="library-toolbar">
         <label className="story-search">
-          <span className="sr-only">Search</span>
+          <span className="sr-only">{t('Search')}</span>
           <input
             type="search"
-            placeholder="Find a story…"
+            placeholder={t('Find a story…')}
             value={filters.query}
             onChange={(event) => change('query', event.target.value)}
           />
@@ -52,72 +55,84 @@ export function LibraryFilters({ catalog, filters, onChange }: Props) {
           >
             <path d="M4 7h16M7 12h10M10 17h4" />
           </svg>
-          Filters{advancedCount > 0 && <span>{advancedCount}</span>}
+          {t('Filters')}
+          {advancedCount > 0 && <span>{advancedCount}</span>}
         </button>
       </div>
       {open && (
         <div className="filter-panel" id={panelId}>
-          <label>
-            <span>Genre</span>
-            <select
+          <div className="filter-field">
+            <span>{t('Genre')}</span>
+            <SingleSelect
+              label={t('Genre')}
               value={filters.genre}
-              onChange={(event) => change('genre', event.target.value)}
-            >
-              <option value="all">All genres</option>
-              {genres.map((genre) => (
-                <option key={genre}>{genre}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            <span>Language</span>
-            <select
+              onChange={(value) => change('genre', value)}
+              options={[
+                { value: 'all', label: t('All genres') },
+                ...genres.map((genre) => ({
+                  value: genre,
+                  label: text(genre),
+                })),
+              ]}
+            />
+          </div>
+          <div className="filter-field">
+            <span>{t('Language')}</span>
+            <SingleSelect
+              label={t('Language')}
               value={filters.language}
-              onChange={(event) => change('language', event.target.value)}
-            >
-              <option value="all">All languages</option>
-              {languages.map((language) => (
-                <option key={language} value={language}>
-                  {languageNames[language]}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            <span>Typing time</span>
-            <select
+              onChange={(value) => change('language', value)}
+              options={[
+                { value: 'all', label: t('All languages') },
+                ...languages.map((language) => ({
+                  value: language,
+                  label: languageNames[language],
+                  lang: language,
+                })),
+              ]}
+            />
+          </div>
+          <div className="filter-field">
+            <span>{t('Typing time')}</span>
+            <SingleSelect
+              label={t('Typing time')}
               value={filters.time}
-              onChange={(event) => change('time', event.target.value)}
-            >
-              <option value="all">Any length</option>
-              <option value="short">Up to 5 min</option>
-              <option value="medium">6–10 min</option>
-              <option value="long">Over 10 min</option>
-            </select>
-          </label>
-          <label>
-            <span>Progress</span>
-            <select
+              onChange={(value) => change('time', value)}
+              options={[
+                { value: 'all', label: t('Any length') },
+                { value: 'short', label: t('Up to 5 min') },
+                { value: 'medium', label: t('6\u201310 min') },
+                { value: 'long', label: t('Over 10 min') },
+              ]}
+            />
+          </div>
+          <div className="filter-field">
+            <span>{t('Progress')}</span>
+            <SingleSelect
+              label={t('Progress')}
               value={filters.progress}
-              onChange={(event) => change('progress', event.target.value)}
-            >
-              <option value="all">Any progress</option>
-              <option value="new">Not started</option>
-              <option value="started">In progress</option>
-              <option value="finished">Completed</option>
-            </select>
-          </label>
-          <label>
-            <span>Sort</span>
-            <select
+              onChange={(value) => change('progress', value)}
+              options={[
+                { value: 'all', label: t('Any progress') },
+                { value: 'new', label: t('Not started') },
+                { value: 'started', label: t('In progress') },
+                { value: 'finished', label: t('Completed') },
+              ]}
+            />
+          </div>
+          <div className="filter-field">
+            <span>{t('Sort')}</span>
+            <SingleSelect
+              label={t('Sort')}
               value={filters.sort}
-              onChange={(event) => change('sort', event.target.value)}
-            >
-              <option value="collection">Collection order</option>
-              <option value="title">Title A–Z</option>
-              <option value="shortest">Shortest first</option>
-            </select>
-          </label>
+              onChange={(value) => change('sort', value)}
+              options={[
+                { value: 'collection', label: t('Collection order') },
+                { value: 'title', label: t('Title A\u2013Z') },
+                { value: 'shortest', label: t('Shortest first') },
+              ]}
+            />
+          </div>
         </div>
       )}
       {active && (
@@ -126,7 +141,7 @@ export function LibraryFilters({ catalog, filters, onChange }: Props) {
           className="clear-filters"
           onClick={() => onChange({ ...defaultFilters })}
         >
-          Reset filters
+          {t('Reset filters')}
         </button>
       )}
     </form>

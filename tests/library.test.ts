@@ -137,7 +137,7 @@ test('the grouped card prefers an unfinished edition over a completed one', () =
 });
 
 test('preferred language chooses a translated edition without hiding other stories', () => {
-  const result = filterStories(stories, defaultFilters, {}, 'it');
+  const result = filterStories(stories, defaultFilters, {}, ['it']);
   assert.equal(
     result.length,
     new Set(stories.map((story) => story.storyId)).size,
@@ -156,7 +156,7 @@ test('French can be filtered or preferred without duplicating story cards', () =
     ),
     ['un-petit-jardin'],
   );
-  const result = filterStories(stories, defaultFilters, {}, 'fr');
+  const result = filterStories(stories, defaultFilters, {}, ['fr']);
   assert.equal(
     result.length,
     new Set(stories.map((story) => story.storyId)).size,
@@ -165,4 +165,38 @@ test('French can be filtered or preferred without duplicating story cards', () =
     result.find((story) => story.storyId === 'one-small-garden')!.title,
     'Un petit jardin',
   );
+});
+
+test('multiple reading languages prefer available editions and preserve an in-progress preferred edition', () => {
+  const result = filterStories(
+    stories,
+    defaultFilters,
+    {
+      'un-piccolo-giardino': {
+        value: 'Ogni',
+        started: true,
+        finished: false,
+        attempts: 4,
+        correct: 4,
+        elapsed: 100,
+      },
+    },
+    ['en', 'it'],
+  );
+  assert.equal(
+    result.find((story) => story.storyId === 'one-small-garden')!.language,
+    'it',
+  );
+  assert.ok(result.some((story) => story.language === 'en'));
+  assert.equal(
+    result.length,
+    new Set(stories.map((story) => story.storyId)).size,
+  );
+  const explicitFrench = filterStories(
+    stories,
+    { ...defaultFilters, language: 'fr' },
+    {},
+    ['en', 'it'],
+  );
+  assert.equal(explicitFrench[0].language, 'fr');
 });

@@ -9,9 +9,24 @@ import { createStoryCatalog } from './stories/catalog';
 import { defaultFilters } from './library';
 import { usePreferences } from './hooks/usePreferences';
 import { PreferencesDialog } from './components/PreferencesDialog';
+import { I18nProvider } from './i18n/I18nProvider';
+import { usePreferencesSuggestion } from './hooks/usePreferencesSuggestion';
+import { PreferencesSuggestion } from './components/PreferencesSuggestion';
 
 export function App() {
   const preferences = usePreferences();
+  return (
+    <I18nProvider language={preferences.preferences.siteLanguage}>
+      <AppContent settings={preferences} />
+    </I18nProvider>
+  );
+}
+
+function AppContent({
+  settings: preferences,
+}: {
+  settings: ReturnType<typeof usePreferences>;
+}) {
   const catalog = useMemo(() => createStoryCatalog(stories), []);
   const game = useStoryGame({
     catalog,
@@ -21,10 +36,20 @@ export function App() {
   const [filters, setFilters] = useState({ ...defaultFilters });
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const preferencesButton = useRef<HTMLButtonElement>(null);
+  const suggestion = usePreferencesSuggestion(
+    preferences.preferencesConfigured,
+    !preferencesOpen && (!game.inStory || !game.started),
+  );
   function openPreferences() {
+    suggestion.dismiss();
     if (game.inStory && game.started && !game.paused && !game.finished)
       game.togglePause();
     setPreferencesOpen(true);
+  }
+  function closeSuggestion(permanent: boolean) {
+    if (permanent) suggestion.dismiss();
+    else suggestion.postpone();
+    preferencesButton.current?.focus({ preventScroll: true });
   }
   return (
     <div
@@ -38,6 +63,15 @@ export function App() {
         onOpenPreferences={openPreferences}
         preferencesOpen={preferencesOpen}
         preferencesButton={preferencesButton}
+        preferencesSuggestion={
+          suggestion.visible ? (
+            <PreferencesSuggestion
+              onOpen={openPreferences}
+              onDismiss={() => closeSuggestion(true)}
+              onLater={() => closeSuggestion(false)}
+            />
+          ) : undefined
+        }
       />
       <main>
         {game.inStory ? (

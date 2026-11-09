@@ -2,6 +2,21 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { checkKeyboardCompatibility } from '../src/keyboardCompatibility';
 import { applyErrorMode } from '../src/typing.mjs';
+import { italian, translate, type MessageKey } from '../src/i18n/messages';
+
+test('site translations preserve interpolation parameters', () => {
+  for (const [key, value] of Object.entries(italian)) {
+    assert.ok(value.trim());
+    const placeholders = (text: string) =>
+      [...text.matchAll(/\{(\w+)\}/g)].map((match) => match[1]).sort();
+    assert.deepEqual(placeholders(value), placeholders(key), key);
+    assert.equal(translate('en', key as MessageKey), key);
+  }
+  assert.equal(
+    translate('it', '{count} PARAGRAPHS', { count: 4 }),
+    '4 PARAGRAFI',
+  );
+});
 
 test('forward composition permits only Hangul extensions at the end', () => {
   assert.equal(
@@ -73,6 +88,9 @@ import {
   readPreferences,
   storePreferences,
   preferenceKey,
+  defaultPreferences,
+  hasSavedPreferences,
+  getDefaultPreferences,
 } from '../src/preferences';
 
 test('layout suggestions are best-effort and unknown layouts stay unknown', () => {
@@ -109,6 +127,28 @@ test('layout suggestions are best-effort and unknown layouts stay unknown', () =
   assert.equal(guessKeyboard(new Map()), 'unknown');
 });
 
+test('browser-language defaults handle regional tags, unsupported languages and English without duplicates', () => {
+  assert.equal(getDefaultPreferences('it-IT').siteLanguage, 'it');
+  assert.deepEqual(getDefaultPreferences('it-IT').readingLanguages, [
+    'it',
+    'en',
+  ]);
+  assert.equal(getDefaultPreferences('fr-CA').siteLanguage, 'en');
+  assert.deepEqual(getDefaultPreferences('fr-CA').readingLanguages, [
+    'fr',
+    'en',
+  ]);
+  assert.deepEqual(getDefaultPreferences('ko-KR').readingLanguages, [
+    'ko',
+    'en',
+  ]);
+  assert.deepEqual(getDefaultPreferences('en-US').readingLanguages, ['en']);
+  assert.deepEqual(getDefaultPreferences('es-ES').readingLanguages, ['en']);
+  assert.equal(getDefaultPreferences('').siteLanguage, 'en');
+  assert.equal(getDefaultPreferences('IT-it').siteLanguage, 'it');
+  assert.equal(getDefaultPreferences('it').keyboard, 'unknown');
+});
+
 test('preferences validate saved data and handle blocked browser storage', () => {
   let content: string | null = null;
   Object.defineProperty(globalThis, 'localStorage', {
@@ -120,34 +160,68 @@ test('preferences validate saved data and handle blocked browser storage', () =>
       },
     },
   });
-  assert.equal(readPreferences().language, 'none');
+  assert.deepEqual(readPreferences().readingLanguages, ['en']);
+  assert.equal(hasSavedPreferences(), false);
+  content = '{}';
+  assert.equal(hasSavedPreferences(), false);
   assert.equal(
-    storePreferences({ language: 'it', assistance: false, keyboard: 'us' }),
+    storePreferences({
+      ...defaultPreferences,
+      readingLanguages: ['it'],
+      assistance: false,
+      keyboard: 'us',
+    }),
     true,
   );
   assert.deepEqual(readPreferences(), {
-    language: 'it',
+    siteLanguage: 'en',
+    readingLanguages: ['it'],
     assistance: false,
     keyboard: 'us',
     errorMode: 'free',
   });
+  assert.equal(hasSavedPreferences(), true);
   content = '{bad json';
+  assert.equal(hasSavedPreferences(), false);
   assert.equal(readPreferences().keyboard, 'unknown');
+  content = JSON.stringify({ language: 'it' });
+  assert.equal(hasSavedPreferences(), true);
+  assert.deepEqual(readPreferences().readingLanguages, ['it']);
+  assert.equal(readPreferences().siteLanguage, 'en');
+  content = JSON.stringify({
+    siteLanguage: 'it',
+    readingLanguages: ['en', 'it', 'en', 'invalid'],
+    language: 'fr',
+  });
+  assert.deepEqual(readPreferences().readingLanguages, ['en', 'it']);
+  assert.equal(readPreferences().siteLanguage, 'it');
+  content = JSON.stringify({ siteLanguage: 'invalid', readingLanguages: [] });
+  assert.deepEqual(readPreferences().readingLanguages, []);
+  content = JSON.stringify({ language: 'none' });
+  assert.deepEqual(readPreferences().readingLanguages, []);
+  assert.equal(readPreferences().siteLanguage, 'en');
   content = JSON.stringify({
     language: 'invalid',
     keyboard: 'invalid',
     assistance: 'yes',
   });
   assert.equal(readPreferences().assistance, true);
+  assert.equal(hasSavedPreferences(), false);
   Object.defineProperty(globalThis, 'localStorage', {
     configurable: true,
     get() {
       throw new Error('Storage blocked');
     },
   });
-  assert.equal(readPreferences().language, 'none');
+  assert.deepEqual(readPreferences().readingLanguages, ['en']);
+  assert.equal(hasSavedPreferences(), false);
   assert.equal(
-    storePreferences({ language: 'it', assistance: true, keyboard: 'italian' }),
+    storePreferences({
+      ...defaultPreferences,
+      readingLanguages: ['it'],
+      assistance: true,
+      keyboard: 'italian',
+    }),
     false,
   );
 });

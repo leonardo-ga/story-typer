@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/I18nProvider';
 import type { Story } from '../stories/types';
 import type { StoryCatalog } from '../stories/catalog';
 import { getStoryText } from '../stories/text';
@@ -30,46 +31,59 @@ function savedProgress(saved: Session | undefined, target: string) {
 }
 
 export function StoryCard({ story, catalog, saved, preferences }: Props) {
+  const { t, text: localize } = useI18n();
   const { text } = getStoryText(story);
   const editions = catalog.editionsFor(story.storyId);
   const otherEditions = editions.filter((edition) => edition.id !== story.id);
-  const preferredLanguage = preferences.language;
+  const readingLanguages = preferences.readingLanguages;
   return (
     <article className={`story-card theme-${story.theme}`}>
       <StoryCover story={story} />
       <div className="story-card-body">
-        <span className="eyebrow">{story.genre.toUpperCase()}</span>
+        <span className="eyebrow">
+          {localize(story.genre).toLocaleUpperCase()}
+        </span>
         <h2 lang={story.language}>{story.title}</h2>
         <p lang={story.language}>{story.description}</p>
         <div className="tags">
-          <span>{story.paragraphs.length} PARAGRAPHS</span>
-          <span title="Estimated typing time; varies with your speed">
+          <span>
+            {t('{count} PARAGRAPHS', { count: story.paragraphs.length })}
+          </span>
+          <span title={t('Estimated typing time; varies with your speed')}>
             ~{story.estimatedMinutes} MIN
           </span>
           <span lang={story.language}>{languageNames[story.language]}</span>
         </div>
-        {preferredLanguage !== 'none' &&
-          story.language !== preferredLanguage && (
+        {readingLanguages.length > 0 &&
+          !readingLanguages.includes(story.language) && (
             <p className="edition-fallback">
-              {editions.some(
-                (edition) => edition.language === preferredLanguage,
+              {editions.some((edition) =>
+                readingLanguages.includes(edition.language),
               )
-                ? `Showing ${languageNames[story.language]} for these filters.`
-                : `Not yet in ${languageNames[preferredLanguage]}. Available in ${languageNames[story.language]}.`}
+                ? t('Showing {language} for these filters.', {
+                    language: languageNames[story.language],
+                  })
+                : t(
+                    'Not yet in your reading languages. Available in {language}.',
+                    { language: languageNames[story.language] },
+                  )}
             </p>
           )}
         <KeyboardCompatibility text={text} preferences={preferences} />
         <a className="primary" href={`#${story.id}`}>
           {saved?.finished
-            ? 'View your results'
+            ? t('View your results')
             : saved?.started
-              ? 'Continue story'
-              : 'Explore story'}{' '}
+              ? t('Continue story')
+              : t('Explore story')}{' '}
           <span>→</span>
         </a>
         {otherEditions.length > 0 && (
-          <div className="story-editions" aria-label="Other language editions">
-            <span>Also in</span>
+          <div
+            className="story-editions"
+            aria-label={t('Other language editions')}
+          >
+            <span>{t('Also in')}</span>
             {otherEditions.map((edition) => (
               <a
                 key={edition.id}
@@ -84,7 +98,9 @@ export function StoryCard({ story, catalog, saved, preferences }: Props) {
         )}
         {saved?.started && !saved.finished && (
           <span className="saved-progress">
-            {savedProgress(saved, text)}% complete · Saved for this visit
+            {t('{progress}% complete · Saved for this visit', {
+              progress: savedProgress(saved, text),
+            })}
           </span>
         )}
       </div>

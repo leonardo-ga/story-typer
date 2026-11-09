@@ -43,6 +43,10 @@ const { useCompositionInput } = await import(
   '../src/hooks/useCompositionInput'
 );
 const { EffectToggle } = await import('../src/components/EffectToggle');
+const { SingleSelect } = await import('../src/components/SingleSelect');
+const { preferencesSuggestionDelay } = await import(
+  '../src/hooks/usePreferencesSuggestion'
+);
 const { stories } = await import('../src/stories');
 const container = document.getElementById('root')!;
 let root: ReturnType<typeof createRoot> | undefined;
@@ -50,13 +54,435 @@ async function mount(content: React.ReactNode) {
   root = createRoot(container);
   await act(async () => root!.render(content));
 }
+async function chooseOption(trigger: HTMLButtonElement, value: string) {
+  await act(async () => trigger.click());
+  const option = [
+    ...container.querySelectorAll<HTMLButtonElement>('[role="option"]'),
+  ].find((option) => option.dataset.value === value)!;
+  assert.ok(option, 'Missing option: ' + value);
+  await act(async () => option.click());
+}
+
+function controlSuggestionTime() {
+  const originalSet = window.setTimeout;
+  const originalClear = window.clearTimeout;
+  let time = 0;
+  let nextId = -1;
+  const pending = new Map<number, { at: number; run: () => void }>();
+  window.setTimeout = ((
+    handler: TimerHandler,
+    delay?: number,
+    ...args: unknown[]
+  ) => {
+    if (delay === preferencesSuggestionDelay && typeof handler === 'function') {
+      const id = nextId--;
+      pending.set(id, { at: time + delay, run: () => handler(...args) });
+      return id;
+    }
+    return originalSet.call(window, handler, delay, ...args);
+  }) as typeof window.setTimeout;
+  window.clearTimeout = (id?: number) => {
+    if (!pending.delete(id!)) originalClear.call(window, id);
+  };
+  return {
+    advance: async (milliseconds: number) =>
+      act(async () => {
+        time += milliseconds;
+        for (const [id, task] of pending)
+          if (task.at <= time) {
+            pending.delete(id);
+            task.run();
+          }
+      }),
+    restore: () => {
+      window.setTimeout = originalSet;
+      window.clearTimeout = originalClear;
+    },
+  };
+}
+
+function controlPageScroll() {
+  const originalY = Object.getOwnPropertyDescriptor(window, 'scrollY');
+  const originalHeight = Object.getOwnPropertyDescriptor(
+    document.documentElement,
+    'scrollHeight',
+  );
+  let y = 0;
+  Object.defineProperty(window, 'scrollY', {
+    configurable: true,
+    get: () => y,
+  });
+  Object.defineProperty(document.documentElement, 'scrollHeight', {
+    configurable: true,
+    value: 3000,
+  });
+  return {
+    to: async (position: number) =>
+      act(async () => {
+        y = position;
+        window.dispatchEvent(new dom.window.Event('scroll'));
+      }),
+    restore: () => {
+      if (originalY) Object.defineProperty(window, 'scrollY', originalY);
+      else Reflect.deleteProperty(window, 'scrollY');
+      if (originalHeight)
+        Object.defineProperty(
+          document.documentElement,
+          'scrollHeight',
+          originalHeight,
+        );
+      else Reflect.deleteProperty(document.documentElement, 'scrollHeight');
+    },
+  };
+}
+
 afterEach(async () => {
   if (root) await act(async () => root!.unmount());
   root = undefined;
   hidden = false;
   localStorage.clear();
+  window.sessionStorage.clear();
   Reflect.deleteProperty(navigator, 'keyboard');
   window.history.replaceState(null, '', '/');
+});
+
+test('browser language supplies defaults without saving them; explicit site and reading choices survive reload', async () => {
+  const originalLanguage = Object.getOwnPropertyDescriptor(
+    navigator,
+    'language',
+  );
+  Object.defineProperty(navigator, 'language', {
+    configurable: true,
+    value: 'it-IT',
+  });
+  const clock = controlSuggestionTime();
+  try {
+    await mount(<App />);
+    assert.equal(document.documentElement.lang, 'it');
+    assert.equal(localStorage.getItem('story-typer.preferences.v1'), null);
+    await clock.advance(preferencesSuggestionDelay);
+    assert.match(
+      container.querySelector('.preferences-suggestion')!.textContent!,
+      /Modifica le preferenze se necessario/,
+    );
+    await act(async () =>
+      (
+        container.querySelector(
+          '.preferences-suggestion-open',
+        ) as HTMLButtonElement
+      ).click(),
+    );
+    const site = container.querySelector(
+      '.preferred-language .single-select-trigger',
+    ) as HTMLButtonElement;
+    assert.equal(site.value, 'it');
+    assert.match(
+      container.querySelector('.keyboard-controls .single-select-trigger')!
+        .textContent!,
+      /Non impostata/,
+    );
+    await chooseOption(site, 'en');
+    assert.deepEqual(
+      JSON.parse(localStorage.getItem('story-typer.preferences.v1')!)
+        .readingLanguages,
+      ['it', 'en'],
+    );
+    await act(async () =>
+      (
+        container.querySelector('.multi-select-trigger') as HTMLButtonElement
+      ).click(),
+    );
+    await act(async () =>
+      (
+        container.querySelector('.multi-select-clear') as HTMLButtonElement
+      ).click(),
+    );
+    await act(async () => root!.unmount());
+    root = undefined;
+    await mount(<App />);
+    assert.equal(document.documentElement.lang, 'en');
+    await act(async () =>
+      (
+        container.querySelector('.settings-trigger') as HTMLButtonElement
+      ).click(),
+    );
+    assert.match(
+      container.querySelector('.multi-select-trigger')!.textContent!,
+      /No preference/,
+    );
+  } finally {
+    clock.restore();
+    if (originalLanguage)
+      Object.defineProperty(navigator, 'language', originalLanguage);
+    else Reflect.deleteProperty(navigator, 'language');
+  }
+});
+
+test('home header reveals on upward scrolling without jitter, stays visible for focus, and stays steady on story pages', async () => {
+  const scroll = controlPageScroll();
+  localStorage.setItem(
+    'story-typer.preferences.v1',
+    JSON.stringify({ siteLanguage: 'en' }),
+  );
+  try {
+    await mount(<App />);
+    const header = container.querySelector('header')!;
+    assert.equal(header.dataset.hidden, 'false');
+    await scroll.to(160);
+    assert.equal(header.dataset.hidden, 'true');
+    await scroll.to(155);
+    await scroll.to(150);
+    assert.equal(header.dataset.hidden, 'true');
+    await scroll.to(148);
+    assert.equal(header.dataset.hidden, 'false');
+    await scroll.to(153);
+    assert.equal(header.dataset.hidden, 'false');
+    await scroll.to(172);
+    assert.equal(header.dataset.hidden, 'true');
+    const preferences = container.querySelector(
+      '.settings-trigger',
+    ) as HTMLButtonElement;
+    await act(async () => {
+      document.dispatchEvent(
+        new dom.window.KeyboardEvent('keydown', { key: 'Tab', bubbles: true }),
+      );
+      preferences.focus();
+    });
+    assert.equal(header.dataset.hidden, 'false');
+    await scroll.to(500);
+    assert.equal(header.dataset.hidden, 'false');
+    await act(async () => preferences.blur());
+    await scroll.to(530);
+    assert.equal(header.dataset.hidden, 'true');
+    await scroll.to(0);
+    assert.equal(header.dataset.hidden, 'false');
+    await act(async () => {
+      window.history.replaceState(null, '', '/#last-frequency');
+      window.dispatchEvent(new dom.window.HashChangeEvent('hashchange'));
+    });
+    await scroll.to(800);
+    assert.equal(header.dataset.hidden, 'false');
+    assert.equal(header.classList.contains('site-header--reveal'), false);
+  } finally {
+    scroll.restore();
+  }
+});
+
+test('closing preferences after a pointer click does not leave the header pinned; pointer scrolling releases keyboard pinning', async () => {
+  const scroll = controlPageScroll();
+  localStorage.setItem(
+    'story-typer.preferences.v1',
+    JSON.stringify({ siteLanguage: 'en' }),
+  );
+  try {
+    await mount(<App />);
+    const header = container.querySelector('header')!;
+    const trigger = container.querySelector(
+      '.settings-trigger',
+    ) as HTMLButtonElement;
+    await scroll.to(200);
+    await scroll.to(180);
+    await act(async () => {
+      trigger.dispatchEvent(
+        new dom.window.Event('pointerdown', { bubbles: true }),
+      );
+      trigger.focus();
+      trigger.click();
+    });
+    await act(async () =>
+      (container.querySelector('.dialog-close') as HTMLButtonElement).click(),
+    );
+    assert.equal(document.activeElement, trigger);
+    await scroll.to(220);
+    assert.equal(header.dataset.hidden, 'true');
+    await act(async () => {
+      document.dispatchEvent(
+        new dom.window.KeyboardEvent('keydown', { key: 'Tab', bubbles: true }),
+      );
+      trigger.focus();
+    });
+    assert.equal(header.dataset.hidden, 'false');
+    await scroll.to(300);
+    assert.equal(header.dataset.hidden, 'false');
+    await act(async () => window.dispatchEvent(new dom.window.Event('wheel')));
+    await scroll.to(340);
+    assert.equal(header.dataset.hidden, 'true');
+    assert.equal(document.activeElement, trigger);
+  } finally {
+    scroll.restore();
+  }
+});
+
+test('preferences suggestions and the preferences dialog pin the home header while scrolling', async () => {
+  const scroll = controlPageScroll();
+  const clock = controlSuggestionTime();
+  try {
+    await mount(<App />);
+    const header = container.querySelector('header')!;
+    await scroll.to(200);
+    assert.equal(header.dataset.hidden, 'true');
+    await clock.advance(preferencesSuggestionDelay);
+    assert.equal(header.dataset.hidden, 'false');
+    await scroll.to(400);
+    assert.equal(header.dataset.hidden, 'false');
+    await act(async () =>
+      (
+        container.querySelector(
+          '.preferences-suggestion-open',
+        ) as HTMLButtonElement
+      ).click(),
+    );
+    await scroll.to(600);
+    assert.equal(header.dataset.hidden, 'false');
+    assert.ok(container.querySelector('dialog[open]'));
+  } finally {
+    clock.restore();
+    scroll.restore();
+  }
+});
+
+test('new visitors receive a delayed suggestion that opens preferences without repeating', async () => {
+  const clock = controlSuggestionTime();
+  try {
+    await mount(<App />);
+    assert.equal(container.querySelector('.preferences-suggestion'), null);
+    await clock.advance(preferencesSuggestionDelay - 1);
+    assert.equal(container.querySelector('.preferences-suggestion'), null);
+    await clock.advance(1);
+    assert.ok(container.querySelector('.preferences-suggestion'));
+    assert.ok(
+      container.querySelector('.preferences-anchor > .settings-trigger'),
+    );
+    assert.ok(
+      container.querySelector('.preferences-anchor > .preferences-suggestion'),
+    );
+    assert.equal(container.querySelector('dialog'), null);
+    await act(async () =>
+      (
+        container.querySelector(
+          '.preferences-suggestion-open',
+        ) as HTMLButtonElement
+      ).click(),
+    );
+    assert.ok(container.querySelector('dialog[open]'));
+    assert.equal(container.querySelector('.preferences-suggestion'), null);
+    await act(async () =>
+      (container.querySelector('.dialog-close') as HTMLButtonElement).click(),
+    );
+    await clock.advance(preferencesSuggestionDelay);
+    assert.equal(container.querySelector('.preferences-suggestion'), null);
+    await act(async () => root!.unmount());
+    root = undefined;
+    await mount(<App />);
+    await clock.advance(preferencesSuggestionDelay);
+    assert.equal(container.querySelector('.preferences-suggestion'), null);
+  } finally {
+    clock.restore();
+  }
+});
+
+test('Not now snoozes only the tab session and Escape has the same temporary behavior', async () => {
+  const clock = controlSuggestionTime();
+  async function remount() {
+    await act(async () => root!.unmount());
+    root = undefined;
+    await mount(<App />);
+  }
+  try {
+    await mount(<App />);
+    await clock.advance(preferencesSuggestionDelay);
+    assert.equal(
+      container
+        .querySelector('.preferences-suggestion .dialog-close')!
+        .getAttribute('title'),
+      'Don’t show again',
+    );
+    await act(async () =>
+      (
+        container.querySelector(
+          '.preferences-suggestion-later',
+        ) as HTMLButtonElement
+      ).click(),
+    );
+    assert.equal(container.querySelector('dialog'), null);
+    assert.equal(
+      document.activeElement,
+      container.querySelector('.settings-trigger'),
+    );
+    assert.equal(
+      localStorage.getItem('story-typer.preferences-suggestion.dismissed'),
+      null,
+    );
+    assert.equal(localStorage.getItem('story-typer.preferences.v1'), null);
+    await clock.advance(preferencesSuggestionDelay);
+    assert.equal(container.querySelector('.preferences-suggestion'), null);
+    await remount();
+    await clock.advance(preferencesSuggestionDelay);
+    assert.equal(container.querySelector('.preferences-suggestion'), null);
+    window.sessionStorage.clear(); // A new tab session can receive the suggestion again.
+    await remount();
+    await clock.advance(preferencesSuggestionDelay);
+    assert.ok(container.querySelector('.preferences-suggestion'));
+    await act(async () =>
+      Simulate.keyDown(container.querySelector('.preferences-suggestion')!, {
+        key: 'Escape',
+      }),
+    );
+    assert.equal(container.querySelector('.preferences-suggestion'), null);
+    assert.equal(
+      localStorage.getItem('story-typer.preferences-suggestion.dismissed'),
+      null,
+    );
+    assert.equal(
+      document.activeElement,
+      container.querySelector('.settings-trigger'),
+    );
+  } finally {
+    clock.restore();
+  }
+});
+
+test('dismissed suggestions stay dismissed across visits; configured visitors and active readers get no suggestion', async () => {
+  const clock = controlSuggestionTime();
+  async function remount() {
+    await act(async () => root!.unmount());
+    root = undefined;
+    await mount(<App />);
+  }
+  try {
+    await mount(<App />);
+    await clock.advance(preferencesSuggestionDelay);
+    await act(async () =>
+      (
+        container.querySelector(
+          '.preferences-suggestion .dialog-close',
+        ) as HTMLButtonElement
+      ).click(),
+    );
+    await remount();
+    await clock.advance(preferencesSuggestionDelay);
+    assert.equal(container.querySelector('.preferences-suggestion'), null);
+    localStorage.clear();
+    localStorage.setItem(
+      'story-typer.preferences.v1',
+      JSON.stringify({ language: 'it' }),
+    );
+    await remount();
+    await clock.advance(preferencesSuggestionDelay);
+    assert.equal(container.querySelector('.preferences-suggestion'), null);
+    localStorage.clear();
+    window.history.replaceState(null, '', '/#last-frequency');
+    await remount();
+    await act(async () =>
+      (
+        container.querySelector('.overlay > .primary') as HTMLButtonElement
+      ).click(),
+    );
+    await clock.advance(preferencesSuggestionDelay);
+    assert.equal(container.querySelector('.preferences-suggestion'), null);
+  } finally {
+    clock.restore();
+  }
 });
 
 test('Korean story warns about Hangul and accepts a composed syllable', async () => {
@@ -301,26 +727,18 @@ test('catalog language filters, empty results, and reset work in the interface',
     (container.querySelector('.filter-button') as HTMLButtonElement).click(),
   );
   const selectFor = (label: string) =>
-    [...container.querySelectorAll('label')]
+    [...container.querySelectorAll('.filter-field')]
       .find((item) => item.querySelector('span')?.textContent === label)!
-      .querySelector('select')!;
+      .querySelector<HTMLButtonElement>('.single-select-trigger')!;
   const storyCount = new Set(stories.map((story) => story.storyId)).size;
   assert.equal(container.querySelectorAll('.story-card').length, storyCount);
-  await act(async () => {
-    const select = selectFor('Language');
-    select.value = 'it';
-    Simulate.change(select);
-  });
+  await chooseOption(selectFor('Language'), 'it');
   assert.equal(container.querySelectorAll('.story-card').length, 1);
   assert.match(
     container.querySelector('.story-card h2')!.textContent!,
     /Un piccolo giardino/,
   );
-  await act(async () => {
-    const select = selectFor('Genre');
-    select.value = 'Mystery';
-    Simulate.change(select);
-  });
+  await chooseOption(selectFor('Genre'), 'Mystery');
   assert.equal(container.querySelectorAll('.story-card').length, 0);
   assert.ok(container.querySelector('.library-empty'));
   await act(async () =>
@@ -338,13 +756,10 @@ test('catalog filter choice survives opening an Italian edition and returning', 
     (container.querySelector('.filter-button') as HTMLButtonElement).click(),
   );
   const languageSelect = () =>
-    [...container.querySelectorAll('label')]
+    [...container.querySelectorAll('.filter-field')]
       .find((item) => item.querySelector('span')?.textContent === 'Language')!
-      .querySelector('select')!;
-  await act(async () => {
-    languageSelect().value = 'it';
-    Simulate.change(languageSelect());
-  });
+      .querySelector<HTMLButtonElement>('.single-select-trigger')!;
+  await chooseOption(languageSelect(), 'it');
   await act(async () => {
     window.history.replaceState(null, '', '/#un-piccolo-giardino');
     window.dispatchEvent(new dom.window.HashChangeEvent('hashchange'));
@@ -459,12 +874,23 @@ test('preferred language is remembered across mounts without hiding fallback edi
   await act(async () =>
     (container.querySelector('.settings-trigger') as HTMLButtonElement).click(),
   );
-  const preference = container.querySelector(
-    '.preferred-language select',
-  ) as HTMLSelectElement;
+  await act(async () =>
+    (
+      container.querySelector('.multi-select-trigger') as HTMLButtonElement
+    ).click(),
+  );
+  await act(async () =>
+    (
+      [...container.querySelectorAll('.multi-select-option')].find(
+        (row) => row.textContent === 'English',
+      ) as HTMLButtonElement
+    ).click(),
+  );
+  const preference = [
+    ...container.querySelectorAll('.multi-select-option'),
+  ].find((label) => label.textContent === 'Italiano')! as HTMLButtonElement;
   await act(async () => {
-    preference.value = 'it';
-    Simulate.change(preference);
+    preference.click();
   });
   assert.match(container.textContent!, /Un piccolo giardino/);
   assert.equal(
@@ -478,12 +904,382 @@ test('preferred language is remembered across mounts without hiding fallback edi
   await act(async () =>
     (container.querySelector('.settings-trigger') as HTMLButtonElement).click(),
   );
+  await act(async () =>
+    (
+      container.querySelector('.multi-select-trigger') as HTMLButtonElement
+    ).click(),
+  );
   assert.equal(
-    (container.querySelector('.preferred-language select') as HTMLSelectElement)
-      .value,
-    'it',
+    [...container.querySelectorAll('.multi-select-option')]
+      .find((label) => label.textContent === 'Italiano')!
+      .getAttribute('aria-pressed'),
+    'true',
   );
   assert.match(container.textContent!, /Un piccolo giardino/);
+});
+
+test('site language changes immediately and persists independently of multiple reading languages', async () => {
+  await mount(<App />);
+  await act(async () =>
+    (container.querySelector('.settings-trigger') as HTMLButtonElement).click(),
+  );
+  await act(async () =>
+    (
+      container.querySelector('.multi-select-trigger') as HTMLButtonElement
+    ).click(),
+  );
+  for (const language of ['English', 'Italiano']) {
+    const input = [...container.querySelectorAll('.multi-select-option')].find(
+      (label) => label.textContent === language,
+    )! as HTMLButtonElement;
+    if (input.getAttribute('aria-pressed') === 'false')
+      await act(async () => input.click());
+  }
+  const siteLanguage = container.querySelector(
+    '.preferred-language .single-select-trigger',
+  ) as HTMLButtonElement;
+  await chooseOption(siteLanguage, 'it');
+  assert.equal(document.documentElement.lang, 'it');
+  assert.equal(
+    container.querySelector('#preferences-title')!.textContent,
+    'Preferenze',
+  );
+  assert.match(
+    container.querySelector('#library-title')!.textContent!,
+    /Trova la tua prossima storia/,
+  );
+  assert.match(container.textContent!, /One Small Garden/);
+  const saved = JSON.parse(localStorage.getItem('story-typer.preferences.v1')!);
+  assert.deepEqual(saved.readingLanguages, ['en', 'it']);
+  assert.equal(saved.siteLanguage, 'it');
+  await act(async () => root!.unmount());
+  root = undefined;
+  await mount(<App />);
+  assert.equal(document.documentElement.lang, 'it');
+  assert.match(
+    container.querySelector('#library-title')!.textContent!,
+    /Trova la tua prossima storia/,
+  );
+});
+
+test('changing the interface language preserves story text, input and attempt settings', async () => {
+  window.history.replaceState(null, '', '/#last-frequency');
+  await mount(<App />);
+  await act(async () =>
+    (
+      container.querySelector('.overlay > .primary') as HTMLButtonElement
+    ).click(),
+  );
+  const input = container.querySelector('textarea')!;
+  const typed = stories[0].paragraphs[0].text.slice(0, 12);
+  await act(async () => {
+    input.value = typed;
+    Simulate.change(input);
+  });
+  await act(async () =>
+    (container.querySelector('.settings-trigger') as HTMLButtonElement).click(),
+  );
+  const language = container.querySelector(
+    '.preferred-language .single-select-trigger',
+  ) as HTMLButtonElement;
+  await chooseOption(language, 'it');
+  await act(async () =>
+    (container.querySelector('.dialog-close') as HTMLButtonElement).click(),
+  );
+  assert.equal(container.querySelector('textarea')!.value, typed);
+  assert.equal(container.querySelector('.passage')!.getAttribute('lang'), 'en');
+  assert.match(
+    container.querySelector('.pause-control')!.textContent!,
+    /Riprendi/,
+  );
+  assert.equal(
+    container.querySelector('.settings-trigger')!.getAttribute('aria-label'),
+    'Preferenze',
+  );
+  assert.match(
+    container.querySelector('#passage-description')!.textContent!,
+    /Rain taps against the window/,
+  );
+});
+
+test('reading-language multi-select searches, preserves hidden selections, clears and closes with Escape', async () => {
+  await mount(<App />);
+  await act(async () =>
+    (container.querySelector('.settings-trigger') as HTMLButtonElement).click(),
+  );
+  const trigger = container.querySelector(
+    '.multi-select-trigger',
+  ) as HTMLButtonElement;
+  const dialog = container.querySelector('dialog')!;
+  dialog.getBoundingClientRect = () =>
+    ({
+      left: 0,
+      right: 560,
+      top: 20,
+      bottom: 500,
+      width: 560,
+      height: 480,
+    }) as DOMRect;
+  trigger.getBoundingClientRect = () =>
+    ({
+      left: 20,
+      right: 540,
+      top: 400,
+      bottom: 438,
+      width: 520,
+      height: 38,
+    }) as DOMRect;
+  await act(async () => trigger.click());
+  const search = container.querySelector(
+    '.multi-select-search',
+  ) as HTMLInputElement;
+  assert.equal(document.activeElement, search);
+  const panel = container.querySelector('.multi-select-panel') as HTMLElement;
+  assert.ok(parseFloat(panel.style.top) >= 20);
+  assert.ok(parseFloat(panel.style.top) + parseFloat(panel.style.height) < 400);
+  await act(async () =>
+    (
+      container.querySelector('.multi-select-clear') as HTMLButtonElement
+    ).click(),
+  );
+  const query = async (text: string) =>
+    act(async () => {
+      search.value = text;
+      Simulate.change(search);
+    });
+  await query('ital');
+  assert.equal(container.querySelectorAll('.multi-select-option').length, 1);
+  await act(async () =>
+    (
+      container.querySelector('.multi-select-option') as HTMLButtonElement
+    ).click(),
+  );
+  await query('en');
+  await act(async () =>
+    (
+      container.querySelector('.multi-select-option') as HTMLButtonElement
+    ).click(),
+  );
+  assert.deepEqual(
+    JSON.parse(localStorage.getItem('story-typer.preferences.v1')!)
+      .readingLanguages,
+    ['it', 'en'],
+  );
+  await query('no-such-language');
+  assert.match(panel.textContent!, /No languages found/);
+  await act(async () => {
+    search.dispatchEvent(
+      new dom.window.KeyboardEvent('keydown', {
+        key: 'Escape',
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+  });
+  assert.equal(container.querySelector('.multi-select-panel'), null);
+  assert.ok(container.querySelector('dialog[open]'));
+  assert.equal(document.activeElement, trigger);
+  assert.match(trigger.textContent!, /English, Italiano/);
+  await act(async () => trigger.click());
+  assert.equal(
+    (container.querySelector('.multi-select-search') as HTMLInputElement).value,
+    '',
+  );
+  await act(async () =>
+    (
+      container.querySelector('.multi-select-clear') as HTMLButtonElement
+    ).click(),
+  );
+  assert.deepEqual(
+    JSON.parse(localStorage.getItem('story-typer.preferences.v1')!)
+      .readingLanguages,
+    [],
+  );
+  assert.match(trigger.textContent!, /No preference/);
+});
+
+test('language option text, full row and checkmark toggle without checkboxes', async () => {
+  await mount(<App />);
+  await act(async () =>
+    (container.querySelector('.settings-trigger') as HTMLButtonElement).click(),
+  );
+  await act(async () =>
+    (
+      container.querySelector('.multi-select-trigger') as HTMLButtonElement
+    ).click(),
+  );
+  await act(async () =>
+    (
+      container.querySelector('.multi-select-clear') as HTMLButtonElement
+    ).click(),
+  );
+  const row = [...container.querySelectorAll('.multi-select-option')].find(
+    (label) => label.textContent === 'Italiano',
+  ) as HTMLButtonElement;
+  const search = container.querySelector('.multi-select-search')!;
+  assert.equal(container.querySelector('.multi-select-options input'), null);
+  // Focus may briefly leave the search field before clicking a row.
+  await act(async () => Simulate.blur(search, { relatedTarget: null }));
+  assert.ok(container.querySelector('.multi-select-panel'));
+  await act(async () => row.querySelector('span')!.click());
+  assert.equal(row.getAttribute('aria-pressed'), 'true');
+  assert.deepEqual(
+    JSON.parse(localStorage.getItem('story-typer.preferences.v1')!)
+      .readingLanguages,
+    ['it'],
+  );
+  await act(async () => row.click());
+  assert.equal(row.getAttribute('aria-pressed'), 'false');
+  assert.deepEqual(
+    JSON.parse(localStorage.getItem('story-typer.preferences.v1')!)
+      .readingLanguages,
+    [],
+  );
+  assert.ok(container.querySelector('.multi-select-panel'));
+  // The selection indicator is part of the same button hit area.
+  await act(async () =>
+    row
+      .querySelector('svg')!
+      .dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })),
+  );
+  assert.equal(row.getAttribute('aria-pressed'), 'true');
+  assert.deepEqual(
+    JSON.parse(localStorage.getItem('story-typer.preferences.v1')!)
+      .readingLanguages,
+    ['it'],
+  );
+});
+
+test('reopening dropdowns reveals the selected row within the list and uses generic search copy', async () => {
+  const originalRect = window.HTMLElement.prototype.getBoundingClientRect;
+  let last = '';
+  window.HTMLElement.prototype.getBoundingClientRect = function () {
+    if (this.classList.contains('select-menu-options'))
+      return {
+        top: 100,
+        bottom: 200,
+        height: 100,
+        left: 0,
+        right: 300,
+        width: 300,
+      } as DOMRect;
+    if (this.getAttribute('data-value') === last)
+      return {
+        top: 300,
+        bottom: 334,
+        height: 34,
+        left: 0,
+        right: 300,
+        width: 300,
+      } as DOMRect;
+    return originalRect.call(this);
+  };
+  try {
+    for (const count of [8, 12]) {
+      last = String(count - 1);
+      await mount(
+        <SingleSelect
+          label="Genre"
+          value={last}
+          onChange={() => {}}
+          options={Array.from({ length: count }, (_, index) => ({
+            value: String(index),
+            label: `Genre ${index}`,
+          }))}
+        />,
+      );
+      const trigger = container.querySelector(
+        '.single-select-trigger',
+      ) as HTMLButtonElement;
+      for (let opening = 0; opening < 2; opening++) {
+        await act(async () => trigger.click());
+        assert.equal(
+          (container.querySelector('.select-menu-options') as HTMLElement)
+            .scrollTop,
+          134,
+        );
+        assert.equal(
+          container
+            .querySelector('[aria-selected="true"]')!
+            .getAttribute('data-value'),
+          last,
+        );
+        const search = container.querySelector(
+          '.single-select-search',
+        ) as HTMLInputElement | null;
+        if (search) {
+          assert.equal(search.placeholder, 'Search…');
+          assert.equal(document.activeElement, search);
+        } else
+          assert.equal(
+            document.activeElement?.getAttribute('data-value'),
+            last,
+          );
+        await act(async () =>
+          Simulate.keyDown(document.activeElement!, { key: 'Escape' }),
+        );
+        assert.equal(container.querySelector('.select-menu-panel'), null);
+      }
+      await act(async () => root!.unmount());
+      root = undefined;
+    }
+  } finally {
+    window.HTMLElement.prototype.getBoundingClientRect = originalRect;
+  }
+});
+
+test('single-select supports full-row selection, arrow keys, typeahead, focus restoration and Escape', async () => {
+  function Harness() {
+    const [value, setValue] = useState('a');
+    return (
+      <SingleSelect
+        label="Choice"
+        value={value}
+        onChange={setValue}
+        options={[
+          { value: 'a', label: 'Alpha' },
+          { value: 'b', label: 'Beta' },
+          { value: 'c', label: 'Gamma' },
+        ]}
+      />
+    );
+  }
+  await mount(<Harness />);
+  const trigger = container.querySelector(
+    '.single-select-trigger',
+  ) as HTMLButtonElement;
+  await act(async () => Simulate.keyDown(trigger, { key: 'ArrowDown' }));
+  assert.equal(document.activeElement?.textContent, 'Alpha');
+  await act(async () =>
+    Simulate.keyDown(document.activeElement!, { key: 'End' }),
+  );
+  assert.equal(document.activeElement?.textContent, 'Gamma');
+  await act(async () =>
+    Simulate.keyDown(document.activeElement!, { key: 'ArrowUp' }),
+  );
+  assert.equal(document.activeElement?.textContent, 'Beta');
+  await act(async () =>
+    Simulate.keyDown(document.activeElement!, { key: 'Home' }),
+  );
+  assert.equal(document.activeElement?.textContent, 'Alpha');
+  await act(async () =>
+    Simulate.keyDown(document.activeElement!, { key: 'g' }),
+  );
+  assert.equal(document.activeElement?.textContent, 'Gamma');
+  await act(async () =>
+    (document.activeElement as HTMLElement).querySelector('span')!.click(),
+  );
+  assert.equal(trigger.value, 'c');
+  assert.equal(container.querySelector('[role="listbox"]'), null);
+  assert.equal(document.activeElement, trigger);
+  await act(async () => trigger.click());
+  assert.equal(document.activeElement?.getAttribute('aria-selected'), 'true');
+  await act(async () =>
+    Simulate.keyDown(document.activeElement!, { key: 'Escape' }),
+  );
+  assert.equal(trigger.value, 'c');
+  assert.equal(document.activeElement, trigger);
+  assert.equal(container.querySelector('[role="listbox"]'), null);
 });
 
 test('keyboard suggestions are not saved until explicitly confirmed', async () => {
@@ -592,12 +1388,9 @@ test('manual keyboard selection takes priority over an unfinished automatic chec
     (container.querySelector('.settings-trigger') as HTMLButtonElement).click(),
   );
   const select = container.querySelector(
-    '.keyboard-controls select',
-  ) as HTMLSelectElement;
-  await act(async () => {
-    select.value = 'us';
-    Simulate.change(select);
-  });
+    '.keyboard-controls .single-select-trigger',
+  ) as HTMLButtonElement;
+  await chooseOption(select, 'us');
   await act(async () => resolve(new Map([['Semicolon', 'ò']])));
   assert.equal(select.value, 'us');
   assert.equal(container.querySelector('.keyboard-confirmation'), null);
@@ -647,13 +1440,16 @@ test('rejecting a detected layout restores the dropdown without saving it', asyn
   await act(async () =>
     (container.querySelector('.settings-trigger') as HTMLButtonElement).click(),
   );
-  assert.equal(container.querySelector('.keyboard-controls select'), null);
+  assert.equal(
+    container.querySelector('.keyboard-controls .single-select-trigger'),
+    null,
+  );
   await act(async () =>
     (container.querySelector('.dismiss-layout') as HTMLButtonElement).click(),
   );
   const select = container.querySelector(
-    '.keyboard-controls select',
-  ) as HTMLSelectElement;
+    '.keyboard-controls .single-select-trigger',
+  ) as HTMLButtonElement;
   assert.equal(select.value, 'unknown');
   assert.equal(document.activeElement, select);
   assert.equal(localStorage.getItem('story-typer.preferences.v1'), null);
@@ -742,13 +1538,12 @@ test('Keep moving rejects corrections, records errors, and keeps its mode after 
         container.querySelector('.settings-trigger') as HTMLButtonElement
       ).click(),
     );
-    await act(async () => {
-      const mode = container.querySelector(
-        '.error-mode-options select',
-      ) as HTMLSelectElement;
-      mode.value = 'free';
-      Simulate.change(mode);
-    });
+    await chooseOption(
+      container.querySelector(
+        '.error-mode-options .single-select-trigger',
+      ) as HTMLButtonElement,
+      'free',
+    );
     await act(async () =>
       (container.querySelector('.dialog-close') as HTMLButtonElement).click(),
     );
@@ -822,9 +1617,10 @@ test('all error modes explain their behavior before selection', async () => {
     (container.querySelector('.settings-trigger') as HTMLButtonElement).click(),
   );
   const select = container.querySelector(
-    '.error-mode-options select',
-  ) as HTMLSelectElement;
-  const choices = [...select.options];
+    '.error-mode-options .single-select-trigger',
+  ) as HTMLButtonElement;
+  await act(async () => select.click());
+  const choices = [...container.querySelectorAll('[role="option"]')];
   assert.equal(choices.length, 3);
   assert.match(choices[0].textContent!, /Story/);
   assert.match(choices[0].textContent!, /corrections optional/);
@@ -832,6 +1628,8 @@ test('all error modes explain their behavior before selection', async () => {
   assert.match(choices[1].textContent!, /fix errors to continue/);
   assert.match(choices[2].textContent!, /Speed/);
   assert.match(choices[2].textContent!, /corrections disabled/);
+  if (container.querySelector('[role="listbox"]'))
+    await act(async () => select.click());
   const info = container.querySelector(
     '[aria-label="About typing settings"]',
   ) as HTMLButtonElement;
@@ -844,10 +1642,7 @@ test('all error modes explain their behavior before selection', async () => {
   await act(async () => Simulate.keyDown(info, { key: 'Escape' }));
   assert.equal(container.querySelector('[role="tooltip"]'), null);
   assert.ok(container.querySelector('dialog'));
-  await act(async () => {
-    select.value = 'correct';
-    Simulate.change(select);
-  });
+  await chooseOption(select, 'correct');
   assert.equal(
     JSON.parse(localStorage.getItem('story-typer.preferences.v1')!).errorMode,
     'correct',

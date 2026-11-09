@@ -1,7 +1,9 @@
+import { useI18n } from '../i18n/I18nProvider';
 import { accuracy } from '../metrics.mjs';
 import type { StoryGame } from '../hooks/useStoryGame';
 
 export function ReaderControls({ game }: { game: StoryGame }) {
+  const { t } = useI18n();
   const {
     wpm,
     correct,
@@ -21,15 +23,19 @@ export function ReaderControls({ game }: { game: StoryGame }) {
     <div className="stats-bar">
       <div className="stat">
         <strong>{wpm}</strong>
-        <span>WORDS / MIN</span>
+        <span>{t('WORDS / MIN')}</span>
       </div>
       <div className="stat">
         <strong>{accuracy(correct + assisted, attempts)}%</strong>
-        <span>ACCURACY</span>
+        <span>{t('ACCURACY')}</span>
       </div>
-      <span className="compact-progress">{progress}% read</span>
+      <span className="compact-progress">
+        {t('{progress}% read', { progress })}
+      </span>
       {assisted > 0 && (
-        <span className="assisted-count">{assisted} assisted</span>
+        <span className="assisted-count">
+          {t('{count} assisted', { count: assisted })}
+        </span>
       )}
       {started &&
         !paused &&
@@ -42,7 +48,7 @@ export function ReaderControls({ game }: { game: StoryGame }) {
               change(value + nextCharacter);
               focusTyping();
             }}
-            aria-label={`Insert ${nextCharacter}`}
+            aria-label={t('Insert {character}', { character: nextCharacter })}
           >
             {nextCharacter}
           </button>
@@ -66,7 +72,7 @@ export function ReaderControls({ game }: { game: StoryGame }) {
               <path d="M9 5v14M15 5v14" />
             )}
           </svg>
-          {paused ? 'Resume' : 'Pause'}
+          {paused ? t('Resume') : t('Pause')}
         </button>
       )}
     </div>

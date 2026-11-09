@@ -1,5 +1,8 @@
+import { useI18n } from '../i18n/I18nProvider';
 import { useEffect, useRef, useState } from 'react';
 import { InfoTip } from './InfoTip';
+import { SingleSelect } from './SingleSelect';
+import type { MessageKey } from '../i18n/messages';
 import {
   detectKeyboard,
   supportsKeyboardDetection,
@@ -15,11 +18,12 @@ export function KeyboardPreference({
   preferences: Preferences;
   onChange: (patch: Partial<Preferences>) => void;
 }) {
+  const { t, text } = useI18n();
   const [checking, setChecking] = useState(false);
   const [suggestion, setSuggestion] = useState<KeyboardLayout | null>(null);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState<MessageKey | ''>('');
   const request = useRef(0);
-  const layoutSelect = useRef<HTMLSelectElement>(null);
+  const layoutSelect = useRef<HTMLButtonElement>(null);
   const restoreLayoutFocus = useRef(false);
   useEffect(() => {
     if (!suggestion && restoreLayoutFocus.current) {
@@ -70,12 +74,12 @@ export function KeyboardPreference({
           </svg>
         </span>
         <div>
-          <h3>Keyboard</h3>
+          <h3>{t('Keyboard')}</h3>
         </div>
-        <InfoTip label="About keyboard detection">
-          Confirm the suggested layout to check story characters. Choose a
-          specific layout: broad AZERTY and QWERTZ families stay unverified.
-          Shortcuts and input methods may support additional characters.
+        <InfoTip label={t('About keyboard detection')}>
+          {t(
+            'Confirm the suggested layout to check story characters. Choose a specific layout: broad AZERTY and QWERTZ families stay unverified. Shortcuts and input methods may support additional characters.',
+          )}
         </InfoTip>
       </div>
       <div className="keyboard-controls">
@@ -84,15 +88,17 @@ export function KeyboardPreference({
             <span
               className="keyboard-suggestion"
               role="status"
-              title={`Use ${keyboardNames[suggestion]}?`}
+              title={t('Use {layout}?', {
+                layout: text(keyboardNames[suggestion]),
+              })}
             >
-              Use <strong>{keyboardNames[suggestion]}</strong>?
+              {t('Use {layout}?', { layout: text(keyboardNames[suggestion]) })}
             </span>
             <button
               type="button"
               className="confirm-layout"
-              aria-label="Confirm detected keyboard layout"
-              title="Use this layout"
+              aria-label={t('Confirm detected keyboard layout')}
+              title={t('Use this layout')}
               onClick={() => {
                 restoreLayoutFocus.current = true;
                 onChange({ keyboard: suggestion });
@@ -113,8 +119,8 @@ export function KeyboardPreference({
             <button
               type="button"
               className="dismiss-layout"
-              aria-label="Choose keyboard layout manually"
-              title="Choose manually"
+              aria-label={t('Choose keyboard layout manually')}
+              title={t('Choose manually')}
               onClick={() => {
                 restoreLayoutFocus.current = true;
                 setSuggestion(null);
@@ -133,28 +139,25 @@ export function KeyboardPreference({
             </button>
           </div>
         ) : (
-          <label>
-            <span className="sr-only">Keyboard layout</span>
-            <select
-              ref={layoutSelect}
-              value={preferences.keyboard}
-              onChange={(event) => {
-                request.current++;
-                setChecking(false);
-                onChange({ keyboard: event.target.value as KeyboardLayout });
-                setSuggestion(null);
-                setMessage('');
-              }}
-            >
-              {Object.entries(keyboardNames).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {value === 'unknown' && checking
-                    ? 'Detecting layout…'
-                    : label}
-                </option>
-              ))}
-            </select>
-          </label>
+          <SingleSelect
+            label={t('Keyboard layout')}
+            triggerRef={layoutSelect}
+            value={preferences.keyboard}
+            onChange={(keyboard: KeyboardLayout) => {
+              request.current++;
+              setChecking(false);
+              onChange({ keyboard });
+              setSuggestion(null);
+              setMessage('');
+            }}
+            options={Object.entries(keyboardNames).map(([value, label]) => ({
+              value: value as KeyboardLayout,
+              label:
+                value === 'unknown' && checking
+                  ? t('Detecting layout…')
+                  : text(label),
+            }))}
+          />
         )}
         {!suggestion && (
           <button
@@ -162,15 +165,15 @@ export function KeyboardPreference({
             className="secondary-button detect-keyboard"
             disabled={checking}
             onClick={() => void check()}
-            aria-label="Detect system keyboard layout"
+            aria-label={t('Detect system keyboard layout')}
           >
-            {checking ? 'Checking…' : 'Detect'}
+            {checking ? t('Checking…') : t('Detect')}
           </button>
         )}
       </div>
       {(message || checking) && (
         <p className="preference-help" role="status">
-          {message || 'Checking your layout…'}
+          {message ? t(message) : t('Checking your layout…')}
         </p>
       )}
     </div>

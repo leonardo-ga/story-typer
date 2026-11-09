@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/I18nProvider';
 import { useId, useState } from 'react';
 
 const icons = {
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export function EffectToggle({ label, icon, active, onToggle }: Props) {
+  const { t } = useI18n();
   const tooltipId = useId();
   const [dismissed, setDismissed] = useState(false);
   return (
@@ -67,7 +69,9 @@ export function EffectToggle({ label, icon, active, onToggle }: Props) {
       </button>
       <span className="effect-tooltip" id={tooltipId} role="tooltip">
         {label}
-        <span className="effect-tooltip-state">{active ? 'On' : 'Off'}</span>
+        <span className="effect-tooltip-state">
+          {active ? t('On') : t('Off')}
+        </span>
       </span>
     </div>
   );

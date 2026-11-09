@@ -17,6 +17,7 @@ import { useStoryAudio } from './useStoryAudio';
 import { useReaderViewport } from './useReaderViewport';
 import type { ErrorMode } from '../preferences';
 import { useActiveTimer } from './useActiveTimer';
+import { useI18n } from '../i18n/I18nProvider';
 
 const emptySession: Session = {
   value: '',
@@ -37,6 +38,7 @@ export function useStoryGame({
   defaultErrorMode?: ErrorMode;
 }) {
   const { findStory, stories } = catalog;
+  const { t } = useI18n();
   const initialStory = findStory(window.location.hash);
   const [selectedId, setSelectedId] = useState(
     initialStory?.id ?? stories[0].id,
@@ -171,8 +173,8 @@ export function useStoryGame({
   useEffect(() => {
     document.title = inStory
       ? `${selected.title} — Story Typer`
-      : 'Story Typer — Choose your story';
-  }, [inStory, selected.title]);
+      : `Story Typer — ${t('Choose your story')}`;
+  }, [inStory, selected.title, t]);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (

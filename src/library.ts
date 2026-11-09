@@ -24,7 +24,7 @@ export function filterStories(
   stories: readonly Story[],
   filters: LibraryFilters,
   sessions: Record<string, Session>,
-  preferredLanguage: Language | 'none' = 'none',
+  readingLanguages: readonly Language[] = [],
 ) {
   const query = searchable(filters.query.trim());
   const matches = stories.filter((story) => {
@@ -55,7 +55,7 @@ export function filterStories(
   const groups = new Map<string, Story>();
   const sessionRank = (story: Story) => {
     const session = sessions[story.id];
-    const languageRank = story.language === preferredLanguage ? 4 : 0;
+    const languageRank = readingLanguages.includes(story.language) ? 4 : 0;
     return (
       languageRank +
       (session?.started && !session.finished ? 2 : session?.finished ? 1 : 0)

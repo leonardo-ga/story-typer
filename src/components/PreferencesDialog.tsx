@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/I18nProvider';
 import { useEffect, useRef, type RefObject } from 'react';
 import { TypingPreferences } from './TypingPreferences';
 import type { Preferences } from '../preferences';
@@ -18,6 +19,7 @@ export function PreferencesDialog({
   onClose,
   returnFocus,
 }: Props) {
+  const { t } = useI18n();
   const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const element = dialog.current!;
@@ -56,15 +58,17 @@ export function PreferencesDialog({
             <SettingsIcon />
           </span>
           <div>
-            <h2 id="preferences-title">Preferences</h2>
+            <h2 id="preferences-title">{t('Preferences')}</h2>
             <p>
-              {preferencesSaved ? 'Saves automatically' : 'This visit only'}
+              {preferencesSaved
+                ? t('Saves automatically')
+                : t('This visit only')}
             </p>
           </div>
           <button
             type="button"
             className="dialog-close"
-            aria-label="Close preferences"
+            aria-label={t('Close preferences')}
             onClick={onClose}
             autoFocus
           >

@@ -1,5 +1,6 @@
 import type { Language } from './stories/types';
 import { isLanguage } from './languages';
+import { isSiteLanguage, type SiteLanguage } from './i18n/messages';
 
 export const keyboardNames = {
   unknown: 'Not set',
@@ -18,24 +19,71 @@ export const errorModeNames: Record<ErrorMode, string> = {
   free: 'Free flow',
 };
 export interface Preferences {
-  language: Language | 'none';
+  siteLanguage: SiteLanguage;
+  readingLanguages: Language[];
   assistance: boolean;
   keyboard: KeyboardLayout;
   errorMode: ErrorMode;
 }
 export const defaultPreferences: Preferences = {
-  language: 'none',
+  siteLanguage: 'en',
+  readingLanguages: ['en'],
   assistance: true,
   keyboard: 'unknown',
   errorMode: 'free',
 };
 export const preferenceKey = 'story-typer.preferences.v1';
 
+/** Browsers expose a preferred language, not the OS language independently. */
+function browserLanguage() {
+  if (typeof navigator === 'undefined') return 'en';
+  return navigator.language || navigator.languages?.[0] || 'en';
+}
+
+export function getDefaultPreferences(locale = browserLanguage()): Preferences {
+  const language = locale.trim().split(/[-_]/)[0].toLowerCase();
+  return {
+    ...defaultPreferences,
+    siteLanguage: isSiteLanguage(language) ? language : 'en',
+    readingLanguages:
+      isLanguage(language) && language !== 'en' ? [language, 'en'] : ['en'],
+  };
+}
+
+export function hasSavedPreferences() {
+  try {
+    const value = JSON.parse(localStorage.getItem(preferenceKey) ?? 'null');
+    return Boolean(
+      value &&
+        (isSiteLanguage(value.siteLanguage) ||
+          (Array.isArray(value.readingLanguages) &&
+            value.readingLanguages.some(isLanguage)) ||
+          isLanguage(value.language) ||
+          (value.keyboard !== 'unknown' &&
+            Object.hasOwn(keyboardNames, value.keyboard)) ||
+          typeof value.assistance === 'boolean' ||
+          Object.hasOwn(errorModeNames, value.errorMode)),
+    );
+  } catch {
+    return false;
+  }
+}
+
 export function readPreferences(): Preferences {
+  const defaults = getDefaultPreferences();
   try {
     const value = JSON.parse(localStorage.getItem(preferenceKey) ?? '{}');
     return {
-      language: isLanguage(value?.language) ? value.language : 'none',
+      siteLanguage: isSiteLanguage(value?.siteLanguage)
+        ? value.siteLanguage
+        : defaults.siteLanguage,
+      readingLanguages: Array.isArray(value?.readingLanguages)
+        ? [...new Set<Language>(value.readingLanguages.filter(isLanguage))]
+        : isLanguage(value?.language)
+          ? [value.language]
+          : value?.language === 'none'
+            ? []
+            : defaults.readingLanguages,
       assistance:
         typeof value?.assistance === 'boolean' ? value.assistance : true,
       keyboard: Object.hasOwn(keyboardNames, value?.keyboard)
@@ -46,7 +94,7 @@ export function readPreferences(): Preferences {
         : 'free',
     };
   } catch {
-    return { ...defaultPreferences };
+    return defaults;
   }
 }
 

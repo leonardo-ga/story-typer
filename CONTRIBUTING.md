@@ -16,6 +16,14 @@ Translations share a `storyId`, not an `id`. They have independent typing sessio
 
 For a new language, add its code and native display name to `src/languages.ts`. The language type, preference validation, and selectors derive from that definition. No keyboard profile is inferred from a story's language: input methods and keyboard layouts are separate settings.
 
+## Site translations
+
+Story languages and interface languages are independent. Site preferences store one `siteLanguage` and an array of `readingLanguages`; an empty array means no reading preference. Keep native language names unchanged and mark story content with the edition's `lang` attribute.
+
+Interface messages live in `src/i18n/messages.ts`. English source messages are typed keys, Italian supplies the initial translation, and the provider exposes `t(message, values)` for interface copy. Use named placeholders for dynamic text instead of concatenating translated sentence fragments. Never translate story prose through this catalog. The `text` helper handles known metadata labels such as genres and artwork descriptions, leaving new content labels unchanged until a translation is added.
+
+To add a site language, register its native name in `siteLanguageNames` and supply a complete `Record<MessageKey, string>` in the translations registry. TypeScript requires every message. The tests check interpolation parameters, preference migration, persistence, and switching site language during an attempt. A story language does not need to have a site translation, or vice versa.
+
 ## Presentation themes
 
 Reuse a theme when its artwork, accent, and ambience fit the story. For a new theme:

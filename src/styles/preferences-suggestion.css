@@ -1,0 +1,113 @@
+.preferences-anchor {
+  position: relative;
+  flex-shrink: 0;
+}
+.site-header:has(.preferences-suggestion) {
+  position: sticky;
+  top: 0;
+  z-index: 9;
+  background: var(--background);
+  box-shadow: 0 6px 20px #0002;
+}
+.preferences-anchor:has(.preferences-suggestion)::after {
+  content: '';
+  position: absolute;
+  z-index: 9;
+  top: calc(100% + 7px);
+  right: 15px;
+  width: 10px;
+  height: 10px;
+  transform: rotate(45deg);
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+  background: var(--surface);
+  pointer-events: none;
+}
+.preferences-suggestion {
+  position: absolute;
+  z-index: 8;
+  right: 0;
+  top: calc(100% + 12px);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: min(328px, calc(100vw - 2 * var(--page-gutter)));
+  max-height: calc(100dvh - var(--header-height) - 24px);
+  overflow-y: auto;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 12px 32px #0005;
+}
+.preferences-suggestion-icon {
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+.preferences-suggestion-icon svg {
+  width: 17px;
+  height: 17px;
+}
+.preferences-suggestion > div {
+  flex: 1;
+  min-width: 0;
+}
+.preferences-suggestion h3 {
+  font:
+    500 15px 'DM Sans',
+    sans-serif;
+  color: var(--text);
+  margin: 0 0 5px;
+}
+.preferences-suggestion p {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--muted);
+  margin: 0 0 10px;
+}
+.preferences-suggestion-open {
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  color: var(--accent);
+  font:
+    500 12px 'DM Sans',
+    sans-serif;
+  padding: 7px 10px;
+}
+.preferences-suggestion-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+.preferences-suggestion-later {
+  padding: 6px 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font:
+    12px 'DM Sans',
+    sans-serif;
+}
+.preferences-suggestion-later:hover {
+  color: var(--text);
+}
+.preferences-suggestion-open:hover {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+.preferences-suggestion-open:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+.preferences-suggestion .dialog-close {
+  width: 24px;
+  height: 24px;
+}

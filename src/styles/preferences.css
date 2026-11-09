@@ -97,6 +97,21 @@
   padding: 0;
   min-width: 0;
 }
+.site-language-heading {
+  min-height: 21px;
+  font-size: 13px;
+  color: #e0e6da;
+}
+.reading-languages {
+  grid-column: 1 / -1;
+  border: 0;
+  margin: 0;
+}
+.reading-languages legend {
+  padding: 0;
+  font-size: 12px;
+  color: #b3c0a9;
+}
 .preference-section--typing {
   grid-column: 1 / -1;
   border-top: 1px solid #ffffff0b;
@@ -212,22 +227,6 @@
 .preferred-language {
   display: block;
 }
-.preferences-dialog select {
-  width: 100%;
-  min-height: 38px;
-  border: 1px solid #4a5845;
-  border-radius: 8px;
-  padding: 8px 10px;
-  background: #202e27;
-  color: #e0e7d9;
-  font:
-    12px 'DM Sans',
-    sans-serif;
-}
-.preferences-dialog select:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
 .preference-help {
   font-size: 10px;
   line-height: 1.5;
@@ -239,7 +238,7 @@
   align-items: center;
   gap: 8px;
 }
-.keyboard-controls label {
+.keyboard-controls .single-select {
   flex: 1;
   min-width: 0;
 }
@@ -435,13 +434,10 @@
   .preference-section--typing {
     padding-top: 14px;
   }
-  .preferences-dialog select {
-    font-size: 16px;
-  }
   .keyboard-controls {
     flex-wrap: nowrap;
   }
-  .keyboard-controls label {
+  .keyboard-controls .single-select {
     min-width: 0;
   }
 }
